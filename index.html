@@ -610,6 +610,222 @@
     .empty-state__icon { font-size: 48px; margin-bottom: 16px; }
     .empty-state__text { font-size: 14px; }
 
+    /* ─── HAGA · AGENTE DE CHAT ───────────────────────────────────────────── */
+    .haga-trigger {
+      position: fixed; bottom: 24px; right: 24px;
+      width: 60px; height: 60px;
+      border-radius: 50%;
+      background: var(--color-primary);
+      color: #fff;
+      border: none; cursor: pointer;
+      box-shadow: 0 8px 24px rgba(255,85,0,.45);
+      font-family: var(--font-display);
+      font-size: 20px; letter-spacing: 1px;
+      z-index: 998;
+      transition: transform .2s cubic-bezier(.22,1,.36,1);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .haga-trigger:hover { transform: scale(1.08); }
+    .haga-trigger__pulse {
+      position: absolute; top: -4px; right: -4px;
+      width: 14px; height: 14px;
+      background: var(--color-green);
+      border-radius: 50%;
+      border: 3px solid var(--bg);
+      animation: haga-pulse 2s infinite;
+    }
+    @keyframes haga-pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.3); opacity: .7; }
+    }
+    .haga-panel {
+      position: fixed; bottom: 24px; right: 24px;
+      width: 400px; max-width: calc(100vw - 32px);
+      height: 600px; max-height: calc(100vh - 64px);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 24px 64px rgba(0,0,0,.6);
+      z-index: 999;
+      opacity: 0;
+      transform: translateY(16px) scale(.96);
+      transition: opacity .25s cubic-bezier(.22,1,.36,1), transform .25s cubic-bezier(.22,1,.36,1);
+    }
+    .haga-panel--open { display: flex; opacity: 1; transform: translateY(0) scale(1); }
+    .haga-panel__header {
+      padding: 16px 20px;
+      background: linear-gradient(135deg, rgba(255,85,0,.15), rgba(255,85,0,0));
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 12px;
+    }
+    .haga-panel__avatar {
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      background: var(--color-primary);
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-display);
+      font-size: 18px; color: #fff; letter-spacing: 1px;
+      flex-shrink: 0;
+    }
+    .haga-panel__info { flex: 1; min-width: 0; }
+    .haga-panel__name {
+      font-family: var(--font-display);
+      font-size: 18px; letter-spacing: 1.5px;
+      color: var(--text);
+    }
+    .haga-panel__status {
+      font-size: 11px; color: var(--color-green);
+      display: flex; align-items: center; gap: 4px;
+    }
+    .haga-panel__status::before {
+      content: ''; width: 6px; height: 6px;
+      background: var(--color-green); border-radius: 50%;
+      box-shadow: 0 0 6px var(--color-green);
+    }
+    .haga-panel__close {
+      background: none; border: none;
+      color: var(--text-dim);
+      font-size: 22px; cursor: pointer;
+      padding: 4px 8px; border-radius: 6px;
+      transition: all .15s;
+    }
+    .haga-panel__close:hover { color: var(--text); background: rgba(255,255,255,.05); }
+    .haga-panel__messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex; flex-direction: column; gap: 12px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--text-dim) transparent;
+    }
+    .haga-panel__messages::-webkit-scrollbar { width: 6px; }
+    .haga-panel__messages::-webkit-scrollbar-thumb { background: var(--text-dim); border-radius: 3px; }
+    .haga-msg {
+      max-width: 85%;
+      padding: 10px 14px;
+      border-radius: 14px;
+      font-size: 13px;
+      line-height: 1.55;
+      animation: haga-msg-in .3s cubic-bezier(.22,1,.36,1);
+    }
+    @keyframes haga-msg-in {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .haga-msg--bot {
+      background: rgba(255,255,255,.04);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-bottom-left-radius: 4px;
+      align-self: flex-start;
+    }
+    .haga-msg--user {
+      background: var(--color-primary);
+      color: #fff;
+      border-bottom-right-radius: 4px;
+      align-self: flex-end;
+      font-weight: 500;
+    }
+    .haga-msg strong { color: var(--color-primary); font-weight: 700; }
+    .haga-msg--user strong { color: #fff; }
+    .haga-msg__meta {
+      font-size: 10px;
+      color: var(--text-dim);
+      margin-top: 4px;
+      letter-spacing: .3px;
+    }
+    .haga-msg pre {
+      background: rgba(0,0,0,.4);
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-family: 'SF Mono', monospace;
+      font-size: 11px;
+      overflow-x: auto;
+      margin: 8px 0;
+      color: var(--text);
+      white-space: pre-wrap;
+      border-left: 3px solid var(--color-primary);
+    }
+    .haga-msg ul { padding-left: 18px; margin: 6px 0; }
+    .haga-msg li { margin: 3px 0; }
+    .haga-suggestions {
+      padding: 0 20px 12px;
+      display: flex; flex-wrap: wrap; gap: 6px;
+      border-top: 1px solid var(--border);
+      padding-top: 12px;
+    }
+    .haga-suggestion {
+      background: rgba(255,85,0,.08);
+      border: 1px solid var(--border-accent);
+      color: var(--color-primary);
+      font-size: 11px; font-weight: 600;
+      padding: 5px 10px;
+      border-radius: 100px;
+      cursor: pointer;
+      transition: all .15s;
+      white-space: nowrap;
+    }
+    .haga-suggestion:hover { background: rgba(255,85,0,.18); }
+    .haga-panel__input-row {
+      padding: 12px 16px 16px;
+      border-top: 1px solid var(--border);
+      display: flex; gap: 8px;
+    }
+    .haga-input {
+      flex: 1;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 10px 16px;
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 13px;
+      outline: none;
+      transition: border-color .15s;
+    }
+    .haga-input:focus { border-color: var(--color-primary); }
+    .haga-send {
+      background: var(--color-primary);
+      color: #fff;
+      border: none; border-radius: 50%;
+      width: 40px; height: 40px;
+      cursor: pointer;
+      font-size: 16px;
+      flex-shrink: 0;
+      transition: all .15s;
+    }
+    .haga-send:hover { background: #e64d00; transform: scale(1.05); }
+    .haga-send:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+    .haga-typing {
+      display: inline-flex; gap: 3px; align-items: center;
+      padding: 12px 16px;
+      background: rgba(255,255,255,.04);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      border-bottom-left-radius: 4px;
+      align-self: flex-start;
+    }
+    .haga-typing span {
+      width: 6px; height: 6px;
+      background: var(--text-muted);
+      border-radius: 50%;
+      animation: haga-typing 1.4s infinite ease-in-out;
+    }
+    .haga-typing span:nth-child(2) { animation-delay: .2s; }
+    .haga-typing span:nth-child(3) { animation-delay: .4s; }
+    @keyframes haga-typing {
+      0%, 60%, 100% { transform: translateY(0); opacity: .4; }
+      30% { transform: translateY(-4px); opacity: 1; }
+    }
+
+    @media (max-width: 600px) {
+      .haga-panel { width: calc(100vw - 16px); right: 8px; bottom: 8px; height: calc(100vh - 16px); }
+      .haga-trigger { right: 16px; bottom: 16px; }
+    }
+
     /* ─── RESPONSIVE ──────────────────────────────────────────────────────── */
     @media (max-width: 900px) {
       .kpi-row { grid-template-columns: repeat(2, 1fr); }
@@ -967,6 +1183,40 @@
 
 <!-- TOAST -->
 <div class="toast" id="toast">Dados salvos com sucesso</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!-- HAGA · AGENTE DE CHAT                                                 -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<button class="haga-trigger" id="hagaTrigger" onclick="hagaToggle()" title="Falar com o HAGA">
+  HG
+  <span class="haga-trigger__pulse"></span>
+</button>
+
+<div class="haga-panel" id="hagaPanel">
+  <div class="haga-panel__header">
+    <div class="haga-panel__avatar">HG</div>
+    <div class="haga-panel__info">
+      <div class="haga-panel__name">HAGA</div>
+      <div class="haga-panel__status">Operador Hagajota · online</div>
+    </div>
+    <button class="haga-panel__close" onclick="hagaToggle()">×</button>
+  </div>
+
+  <div class="haga-panel__messages" id="hagaMessages"></div>
+
+  <div class="haga-suggestions" id="hagaSuggestions">
+    <button class="haga-suggestion" onclick="hagaQuick('/diag')">📊 Diagnóstico</button>
+    <button class="haga-suggestion" onclick="hagaQuick('/ajuste')">🎯 Ajuste da semana</button>
+    <button class="haga-suggestion" onclick="hagaQuick('/proxima')">📅 Próxima campanha</button>
+    <button class="haga-suggestion" onclick="hagaQuick('/wa urg')">💬 Script urgência</button>
+    <button class="haga-suggestion" onclick="hagaQuick('/help')">❓ Comandos</button>
+  </div>
+
+  <div class="haga-panel__input-row">
+    <input type="text" class="haga-input" id="hagaInput" placeholder="Pergunta algo ou usa /comando..." onkeydown="if(event.key==='Enter') hagaSend()">
+    <button class="haga-send" id="hagaSend" onclick="hagaSend()">→</button>
+  </div>
+</div>
 
 <!-- ══════════════════════════════════════════════════════════════════════ -->
 <!-- JAVASCRIPT                                                            -->
@@ -1792,6 +2042,521 @@ function resetAll() {
   location.reload();
 }
 
+// ═══════════════════════════════════════════════════════════════════════
+// ─── HAGA · AGENTE OPERADOR HAGAJOTA ────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════
+//
+// Função: ler o estado do dashboard, conhecer o plano Startfix e responder
+// com diagnósticos, sugestões, scripts prontos e roteiros operacionais.
+//
+// Arquitetura: agente local de regras (sem API). Determinístico e privado.
+// Quando precisar de geração criativa, usa /briefing pra exportar contexto
+// formatado pra colar no Claude.ai.
+// ═══════════════════════════════════════════════════════════════════════
+
+const HAGA_MSGS_KEY = 'startfix_haga_msgs';
+
+// ─── CONHECIMENTO DO PROJETO (memória de longo prazo) ──────────────────
+const HAGA_BRAIN = {
+  marca: 'Startfix',
+  cidade: 'Macaé/RJ',
+  cliente: 'Jorge',
+  estudio: 'Hagajota Studio',
+  fraseBandeira: 'A oficial. As outras são alternativa.',
+  posicionamento: 'A única assistência autorizada Apple operando em Macaé após o fechamento da iPlace.',
+  diferenciais: [
+    'Autorizada oficial Apple (única em Macaé)',
+    'Atendimento Apple + Samsung',
+    'Reparo de tela em 1 hora · horário marcado',
+    'Sistema "leva e traz" (coleta domiciliar)',
+    'Garantia de 3 meses em todos os reparos',
+    '+5.000 reparos realizados',
+    '+180 avaliações Google',
+  ],
+  concorrentes: [
+    { nome: 'Smart e Cia', endereco: 'R. Dr. Júlio Olivier, 588 · Centro', tipo: 'Multi-marca · sem autorização Apple' },
+    { nome: 'Salva Meu Cel', endereco: 'Plaza Macaé + Galeria Carapebus', tipo: 'Multi-marca · 2 unidades · sem autorização Apple' },
+    { nome: 'iRestaurou', endereco: 'Av. Rui Barbosa, 698 · Centro', tipo: 'iPhone + placa · sem autorização Apple' },
+    { nome: 'Talon Store', endereco: 'Av. NS Glória, 1703 · Cavaleiros', tipo: 'Revenda Mac/iPad (não é assistência pura)' },
+    { nome: 'Pepper Cases', endereco: 'R. Lindolfo Color, 131 · Cavaleiros', tipo: 'Acessórios + aparelho reserva' },
+    { nome: 'iPlace', endereco: 'Shopping Plaza Macaé', tipo: '🔴 FECHADA — era a Apple Premium Reseller' },
+  ],
+  metas: { tempo: 10, conversao: 60, reviews: 200, npsMin: 80 },
+};
+
+// ─── SCRIPTS WHATSAPP (3 perfis do funil) ──────────────────────────────
+const HAGA_SCRIPTS = {
+  urgencia: {
+    titulo: 'Atendimento de URGÊNCIA (PF)',
+    contexto: 'Lead chega com tela quebrada/bateria/aparelho sem ligar.',
+    script: `Olá! Aqui é a Startfix, *autorizada Apple oficial de Macaé*.
+
+Pra te dar o prazo correto, me responde rapidinho:
+1️⃣ Qual o modelo do aparelho?
+2️⃣ Qual o problema?
+3️⃣ Você está em Macaé? (se sim, podemos buscar com o leva-e-traz)
+
+Em 1h após confirmação a gente devolve com tela trocada — agendamento mesmo dia se chegar até 14h.
+
+🛡️ Garantia de 3 meses em todos os reparos.`,
+    metaTempo: '< 2h pra fechamento',
+  },
+  pj: {
+    titulo: 'Atendimento FROTA / PJ',
+    contexto: 'Empresa com múltiplos aparelhos. Prospecção ativa ou inbound.',
+    script: `Olá! A Startfix atende contratos PJ aqui em Macaé.
+
+Como somos a *única autorizada Apple oficial da cidade*, oferecemos:
+• Manutenção preventiva mensal
+• SLA de 1h em emergências
+• Aparelho reserva durante reparo
+• Nota fiscal e relatório mensal
+
+Pra te enviar uma proposta, me conta:
+1️⃣ Quantos aparelhos sua empresa opera?
+2️⃣ Apple, Samsung ou misto?
+3️⃣ Qual seu maior desafio com a frota hoje?
+
+Mando uma proposta sob medida em 24h.`,
+    metaTempo: '< 24h pra envio de proposta',
+  },
+  reativacao: {
+    titulo: 'REATIVAÇÃO de cliente antigo',
+    contexto: 'Cliente +6 meses sem contato. Pulso mensal.',
+    script: `Oi {NOME}, aqui é a Startfix 👋
+
+Faz uns meses que cuidamos do seu {APARELHO} — tudo bem com ele?
+
+Tô passando porque essa semana a gente tá com:
+✨ {OFERTA_DA_SEMANA}
+
+Se o aparelho tiver dando qualquer sinal (bateria fraca, lentidão, tela com risco), a gente faz check-up grátis. Sem compromisso.
+
+Quer que eu agende?`,
+    metaTempo: 'Pulso mensal · 1 disparo segmentado por mês',
+  },
+};
+
+// ─── ANÁLISE DO ESTADO ATUAL ───────────────────────────────────────────
+function hagaCurrentWeek() {
+  const data = loadData();
+  if (data.length === 0) return null;
+  return { current: data[data.length - 1], prev: data.length > 1 ? data[data.length - 2] : null, all: data };
+}
+
+function hagaDiagnostico() {
+  const w = hagaCurrentWeek();
+  if (!w) return 'Não tem nenhuma semana registrada ainda. Sincroniza a planilha (botão 🔄 no topo) ou registra manualmente em <strong>Registrar Semana</strong>.';
+
+  const { current: c, prev: p } = w;
+  const conv = c.conversao;
+  const meta = HAGA_BRAIN.metas;
+  const semana = formatDate(c.date);
+  const valor = c.valor ? ` · faturando <strong>R$ ${c.valor.toLocaleString('pt-BR')}</strong>` : '';
+
+  const diff = (cur, prev, lower) => {
+    if (prev == null || prev === 0) return '';
+    const d = cur - prev;
+    if (d === 0) return ' (igual à anterior)';
+    const good = lower ? d < 0 : d > 0;
+    return ` (${good ? '↑' : '↓'} ${Math.abs(d)} vs anterior)`;
+  };
+
+  let status = '';
+  if (conv >= meta.conversao) status = '🟢 <strong>Semana no azul</strong> — meta de 60% batida.';
+  else if (conv >= 40) status = '🟡 <strong>Semana ok mas abaixo da meta</strong> — falta acelerar.';
+  else status = '🔴 <strong>Semana crítica</strong> — conversão muito abaixo do esperado.';
+
+  const linhas = [
+    `📅 Semana de <strong>${semana}</strong>${c.responsavel ? ` · atendida por ${c.responsavel}` : ''}${valor}.`,
+    '',
+    status,
+    '',
+    `<ul>`,
+    `<li>Tempo de resposta: <strong>${c.tempo}min</strong>${diff(c.tempo, p?.tempo, true)} — meta &lt; ${meta.tempo}min</li>`,
+    `<li>Leads recebidos: <strong>${c.leads}</strong>${diff(c.leads, p?.leads, false)}</li>`,
+    `<li>Fechados: <strong>${c.fechados}</strong>${diff(c.fechados, p?.fechados, false)}</li>`,
+    `<li>Conversão geral: <strong>${conv}%</strong>${diff(conv, p?.conversao, false)} — meta ${meta.conversao}%</li>`,
+    c.convPadrao ? `<li>Modo Padrão: ${c.convPadrao}% · Modo Agressivo: ${c.convAgressivo}%</li>` : '',
+    `</ul>`,
+  ].filter(Boolean).join('\n');
+
+  return linhas;
+}
+
+function hagaAjuste() {
+  const w = hagaCurrentWeek();
+  if (!w) return 'Sem dados ainda. Sincroniza a planilha primeiro pra eu sugerir.';
+  const c = w.current;
+  const meta = HAGA_BRAIN.metas;
+
+  // Identifica o pior gap e sugere 1 ajuste único (ritual de segunda)
+  const problemas = [];
+  if (c.tempo > meta.tempo) problemas.push({
+    peso: c.tempo - meta.tempo, tipo: 'tempo',
+    diag: `Tempo de resposta em ${c.tempo}min (meta &lt;${meta.tempo}). Você está perdendo lead quente.`,
+    acao: 'Configurar resposta automática no WhatsApp Business com a saudação Apple-oficial + revisar o plantão de atendimento.',
+  });
+  if (c.convAgressivo > 0 && c.convAgressivo < 40) problemas.push({
+    peso: 40 - c.convAgressivo, tipo: 'agressivo',
+    diag: `Modo Agressivo em ${c.convAgressivo}% (meta &gt;40%). O fechamento forçado tá queimando lead.`,
+    acao: 'Suavizar o CTA do script Agressivo OU testar a oferta de garantia estendida em vez de pressão de tempo.',
+  });
+  if (c.convPadrao > 0 && c.convPadrao < 25) problemas.push({
+    peso: 25 - c.convPadrao, tipo: 'padrao',
+    diag: `Modo Padrão em ${c.convPadrao}% (meta &gt;25%). Qualificação muito lenta ou leads frios.`,
+    acao: 'Encurtar o funil em 1 etapa OU ativar a oferta 03 (diagnóstico grátis) já no primeiro contato.',
+  });
+  if (c.origemGoogle > 0 && c.origemIG > 0 && c.origemIG < c.origemGoogle * 0.5) problemas.push({
+    peso: c.origemGoogle - c.origemIG, tipo: 'instagram',
+    diag: `Instagram traz ${c.origemIG} leads vs Google ${c.origemGoogle}. IG está atraindo curioso, não comprador.`,
+    acao: 'Reformular CTA da bio: trocar "conheça" por "orçamento em 10min pelo link". Adicionar selo Apple no destaque do perfil.',
+  });
+  if (c.tempoFechamento > 30) problemas.push({
+    peso: c.tempoFechamento - 30, tipo: 'fechamento',
+    diag: `Tempo até fechamento em ${c.tempoFechamento}min (meta &lt;15). Tem fricção no funil.`,
+    acao: 'Auditar o script: identificar a etapa mais lenta e cortá-la. Pode ser a etapa de orçamento detalhado.',
+  });
+
+  if (problemas.length === 0) {
+    return `🎯 <strong>Ritual de segunda · 9h</strong>
+
+Tudo dentro da meta esta semana. Use o tempo livre pra:
+
+<ul>
+<li>Pedir review Google de 5 clientes que finalizaram nos últimos 7 dias</li>
+<li>Postar 1 caso de antes/depois nos Reels</li>
+<li>Avançar 1 item da Semana 1 do checklist se ainda houver pendente</li>
+</ul>
+
+A regra é mexer em 1 coisa só por semana. Se está tudo ok, mexe na disciplina, não no funil.`;
+  }
+
+  problemas.sort((a, b) => b.peso - a.peso);
+  const top = problemas[0];
+
+  return `🎯 <strong>Ritual de segunda · 9h — 1 ajuste só</strong>
+
+<strong>Diagnóstico:</strong> ${top.diag}
+
+<strong>Ação da semana:</strong> ${top.acao}
+
+<em>Lembre: 52 ajustes por ano. Não mais de 1 por semana — disciplina vence intensidade.</em>`;
+}
+
+function hagaProximaCampanha() {
+  const done = loadCampaigns();
+  const hoje = new Date();
+  const proxima = CAMPAIGNS
+    .map(c => {
+      const [d, m, y] = c.date.split('/');
+      return { ...c, dateObj: new Date(`${y}-${m}-${d}`), feita: !!done[c.id] };
+    })
+    .filter(c => !c.feita && c.dateObj >= hoje)
+    .sort((a, b) => a.dateObj - b.dateObj)[0];
+
+  if (!proxima) return 'Todas as campanhas do calendário 2026 já foram feitas ou passaram. Hora de planejar 2027.';
+
+  const dias = Math.ceil((proxima.dateObj - hoje) / (1000 * 60 * 60 * 24));
+  return `📅 <strong>Próxima campanha: ${proxima.name}</strong>
+
+🗓 ${proxima.date} · faltam <strong>${dias} dia${dias > 1 ? 's' : ''}</strong>
+
+<strong>Oferta sugerida:</strong>
+${proxima.offer}
+
+<strong>Canal principal:</strong> ${proxima.channel}
+
+<strong>O que fazer essa semana:</strong>
+<ul>
+<li>Aprovar com o Jorge a oferta + preço</li>
+<li>Produzir criativo (1 post + 1 reel + 3 stories)</li>
+<li>Preparar disparo segmentado da base WhatsApp</li>
+<li>Atualizar mensagem do LED outdoor</li>
+</ul>
+
+Quando lançar, marca como concluída na aba <strong>Campanhas</strong> que o KPI atualiza sozinho.`;
+}
+
+function hagaScript(perfilArg) {
+  const perfilMap = {
+    'urg': 'urgencia', 'urgencia': 'urgencia', 'urgência': 'urgencia',
+    'pj': 'pj', 'frota': 'pj', 'empresa': 'pj',
+    'reativ': 'reativacao', 'reativacao': 'reativacao', 'reativação': 'reativacao', 'antigo': 'reativacao',
+  };
+  const key = perfilMap[(perfilArg || '').toLowerCase().trim()];
+  if (!key) {
+    return `Qual perfil? Tenho 3 scripts prontos:
+
+<ul>
+<li><strong>/wa urg</strong> — urgência (tela quebrada, bateria, etc)</li>
+<li><strong>/wa pj</strong> — frota / empresa</li>
+<li><strong>/wa reativ</strong> — cliente antigo</li>
+</ul>`;
+  }
+  const s = HAGA_SCRIPTS[key];
+  return `💬 <strong>${s.titulo}</strong>
+
+<em>${s.contexto}</em>
+
+<pre>${s.script}</pre>
+
+⏱ <strong>Meta de tempo:</strong> ${s.metaTempo}`;
+}
+
+function hagaFase() {
+  const atual = PHASES.find(p => p.status === 'current');
+  const concluidas = PHASES.filter(p => p.status === 'done').length;
+  if (!atual) return 'Plano 90d concluído. Hora do próximo ciclo.';
+  return `🛤 <strong>Fase ${atual.n} · ${atual.title}</strong>
+
+📍 ${atual.weeks} · ${concluidas}/5 fases concluídas
+
+<strong>Pra entregar nesta fase:</strong>
+<ul>
+${atual.items.map(i => `<li>${i}</li>`).join('')}
+</ul>`;
+}
+
+function hagaConcorrente(nome) {
+  if (!nome) {
+    return `🥊 <strong>Mapa competitivo · Macaé</strong>
+
+<ul>
+${HAGA_BRAIN.concorrentes.map(c => `<li><strong>${c.nome}</strong> — ${c.endereco}<br><em style="color:var(--text-muted);">${c.tipo}</em></li>`).join('')}
+</ul>
+
+<strong>Insight:</strong> com a iPlace fechada, a Startfix é a única autorizada Apple operando na cidade. Os 5 concorrentes diretos são autônomos multimarca.`;
+  }
+  const c = HAGA_BRAIN.concorrentes.find(x => x.nome.toLowerCase().includes(nome.toLowerCase()));
+  if (!c) return `Não achei "${nome}" no mapa. Os concorrentes diretos são: ${HAGA_BRAIN.concorrentes.map(x => x.nome).join(', ')}.`;
+  return `🥊 <strong>${c.nome}</strong>\n\n📍 ${c.endereco}\n\n${c.tipo}`;
+}
+
+function hagaPosicionamento() {
+  return `🎯 <strong>Posicionamento Startfix</strong>
+
+<strong>Categoria onde a Startfix é única:</strong> a autorizada Apple oficial em Macaé.
+
+<strong>Frase-bandeira:</strong>
+<pre>${HAGA_BRAIN.fraseBandeira}</pre>
+
+<strong>Diferenciais a comunicar (em ordem de força):</strong>
+<ul>
+${HAGA_BRAIN.diferenciais.map(d => `<li>${d}</li>`).join('')}
+</ul>
+
+Use isso em todo copy: hero do site, bio do Insta, saudação do WhatsApp, mensagem do LED.`;
+}
+
+function hagaBriefing() {
+  // Exporta contexto completo pra colar no Claude.ai quando precisar criatividade
+  const w = hagaCurrentWeek();
+  const c = w?.current;
+  return `📋 <strong>Briefing pronto pra colar no Claude.ai</strong>
+
+Copia o bloco abaixo e cola lá quando precisar gerar copy nova, ideias de campanha, etc.
+
+<pre>Sou o time da Hagajota Studio cuidando da Startfix — assistência técnica em Macaé/RJ.
+
+CONTEXTO:
+- Startfix é a ÚNICA autorizada Apple oficial em Macaé (após fechamento da iPlace)
+- Atende Apple + Samsung
+- Diferenciais: reparo em 1h, leva-e-traz, garantia 3 meses, +5.000 reparos
+- Frase-bandeira: "${HAGA_BRAIN.fraseBandeira}"
+- 5 concorrentes diretos (todos sem autorização Apple): ${HAGA_BRAIN.concorrentes.slice(0,5).map(x => x.nome).join(', ')}
+
+ESTADO ATUAL${c ? ` (semana de ${formatDate(c.date)})` : ''}:
+${c ? `- Tempo resposta: ${c.tempo}min · meta <10
+- Leads: ${c.leads} · Fechados: ${c.fechados} · Conv ${c.conversao}%
+- R$ vendido: R$ ${c.valor?.toLocaleString('pt-BR') || 0}
+- Origens: Google ${c.origemGoogle} · IG ${c.origemIG} · Indicação ${c.origemIndicacao} · LED ${c.origemLED}` : '- Sem dados ainda.'}
+
+PEDIDO:
+[escreva aqui o que quer — copy de Reels, ideia de campanha, e-mail PJ, etc]</pre>`;
+}
+
+function hagaHelp() {
+  return `🤖 <strong>HAGA · operador Hagajota</strong>
+
+Eu leio o dashboard, conheço o plano e respondo com diagnósticos prontos.
+
+<strong>Comandos:</strong>
+<ul>
+<li><strong>/diag</strong> — diagnóstico da semana atual</li>
+<li><strong>/ajuste</strong> — sugestão de 1 ajuste pra semana (ritual de segunda)</li>
+<li><strong>/proxima</strong> — próxima campanha + o que fazer</li>
+<li><strong>/wa [perfil]</strong> — script WhatsApp (urg / pj / reativ)</li>
+<li><strong>/fase</strong> — fase atual do plano 90d</li>
+<li><strong>/concorrente [nome]</strong> — info sobre concorrente</li>
+<li><strong>/pos</strong> — posicionamento + frase-bandeira</li>
+<li><strong>/briefing</strong> — exporta contexto pra colar no Claude.ai</li>
+<li><strong>/limpar</strong> — limpa o histórico do chat</li>
+</ul>
+
+Ou pergunta direto: "como tá a semana?", "o que faço agora?", "tem uma frota chegando", etc.`;
+}
+
+// ─── ROTEADOR DE INTENÇÕES ─────────────────────────────────────────────
+function hagaRespond(input) {
+  const t = input.trim();
+  const low = t.toLowerCase();
+
+  // Comandos slash
+  if (low.startsWith('/')) {
+    const [cmd, ...rest] = low.slice(1).split(/\s+/);
+    const arg = rest.join(' ');
+    switch (cmd) {
+      case 'diag': case 'diagnostico': case 'diagnóstico': return hagaDiagnostico();
+      case 'ajuste': case 'ritual': return hagaAjuste();
+      case 'proxima': case 'próxima': case 'campanha': return hagaProximaCampanha();
+      case 'wa': case 'whatsapp': case 'script': return hagaScript(arg);
+      case 'fase': case 'plano': return hagaFase();
+      case 'concorrente': case 'concorrentes': case 'mapa': return hagaConcorrente(arg);
+      case 'pos': case 'posicionamento': return hagaPosicionamento();
+      case 'briefing': case 'export': return hagaBriefing();
+      case 'limpar': case 'reset': hagaClearMsgs(); return '🧹 Histórico limpo. Começamos de novo.';
+      case 'help': case 'ajuda': case '?': return hagaHelp();
+      default: return `Comando <code>/${cmd}</code> não existe. Digita <strong>/help</strong> pra ver tudo.`;
+    }
+  }
+
+  // Linguagem natural — palavras-chave
+  if (/\b(oi|ola|olá|hey|opa|bom dia|boa tarde|boa noite)\b/.test(low)) {
+    const w = hagaCurrentWeek();
+    if (w) {
+      const c = w.current;
+      return `E aí 👋 Aqui é o HAGA, seu operador Hagajota.
+
+Olhei aqui agora — última semana registrada foi ${formatDate(c.date)}, ${c.leads} leads, ${c.fechados} fechados (${c.conversao}%)${c.valor ? ', R$ ' + c.valor.toLocaleString('pt-BR') + ' faturados' : ''}.
+
+Quer que eu rode <strong>/diag</strong> completo ou já parto pro <strong>/ajuste</strong> da semana?`;
+    }
+    return `E aí 👋 Aqui é o HAGA, seu operador Hagajota.
+
+Não tem nenhuma semana registrada ainda. Sincroniza a planilha (botão 🔄 lá em cima) que eu já te dou o diagnóstico.`;
+  }
+  if (/\b(como|tá|esta|está|semana|kpi|status|resultado)\b/.test(low)) return hagaDiagnostico();
+  if (/\b(ajust|fazer|próxim|proxim|o que fa[çz]o|prioridade|foco)\b/.test(low)) return hagaAjuste();
+  if (/\b(campanh|próxima campanha|datas|comemorat|mães|namorad|pais|black|natal)\b/.test(low)) return hagaProximaCampanha();
+  if (/\b(tela quebr|bateria|n[ãa]o liga|urg[êe]ncia|quebrou|trinc)\b/.test(low)) return hagaScript('urg');
+  if (/\b(frota|pj|empresa|contrato|cnpj)\b/.test(low)) return hagaScript('pj');
+  if (/\b(antigo|reativ|sumido|voltar|cliente velho)\b/.test(low)) return hagaScript('reativ');
+  if (/\b(concorrent|smart|salva|iplace|irestaurou|talon|pepper)\b/.test(low)) return hagaConcorrente(low.match(/\b(smart|salva|iplace|irestaurou|talon|pepper)\b/)?.[0]);
+  if (/\b(fase|plano|90 dias|etapa)\b/.test(low)) return hagaFase();
+  if (/\b(posicion|frase|bandeira|diferencial|categoria)\b/.test(low)) return hagaPosicionamento();
+  if (/\b(claude|gpt|ia|ai|brief|copy|criar copy)\b/.test(low)) return hagaBriefing();
+
+  return `Não peguei o que você quis. Tenta um comando direto:
+
+<ul>
+<li><strong>/diag</strong> — diagnóstico</li>
+<li><strong>/ajuste</strong> — ajuste da semana</li>
+<li><strong>/proxima</strong> — próxima campanha</li>
+<li><strong>/wa urg</strong> — script urgência</li>
+<li><strong>/help</strong> — todos os comandos</li>
+</ul>
+
+Ou pergunta tipo: "como tá a conversão?", "o que faço essa semana?", "tem uma empresa querendo contrato".`;
+}
+
+// ─── UI / PERSISTÊNCIA ──────────────────────────────────────────────────
+function hagaLoadMsgs() {
+  try { return JSON.parse(localStorage.getItem(HAGA_MSGS_KEY)) || []; }
+  catch { return []; }
+}
+function hagaSaveMsgs(msgs) { localStorage.setItem(HAGA_MSGS_KEY, JSON.stringify(msgs)); }
+function hagaClearMsgs() { localStorage.removeItem(HAGA_MSGS_KEY); document.getElementById('hagaMessages').innerHTML = ''; setTimeout(hagaWelcome, 200); }
+
+function hagaRenderMsg(text, who, save = true) {
+  const el = document.createElement('div');
+  el.className = 'haga-msg haga-msg--' + who;
+  // Permitir HTML básico (strong, ul, li, pre, em, code, br) — texto vem do nosso código
+  el.innerHTML = text.replace(/\n/g, '<br>');
+  document.getElementById('hagaMessages').appendChild(el);
+  el.scrollIntoView({ behavior: 'smooth', block: 'end' });
+
+  if (save) {
+    const msgs = hagaLoadMsgs();
+    msgs.push({ who, text, ts: Date.now() });
+    hagaSaveMsgs(msgs);
+  }
+}
+
+function hagaShowTyping() {
+  const el = document.createElement('div');
+  el.className = 'haga-typing';
+  el.id = 'hagaTyping';
+  el.innerHTML = '<span></span><span></span><span></span>';
+  document.getElementById('hagaMessages').appendChild(el);
+  el.scrollIntoView({ behavior: 'smooth', block: 'end' });
+}
+function hagaHideTyping() {
+  const el = document.getElementById('hagaTyping');
+  if (el) el.remove();
+}
+
+function hagaSend() {
+  const inp = document.getElementById('hagaInput');
+  const text = inp.value.trim();
+  if (!text) return;
+  inp.value = '';
+  hagaRenderMsg(text, 'user');
+
+  hagaShowTyping();
+  // Pequeno delay pra parecer "pensando"
+  setTimeout(() => {
+    hagaHideTyping();
+    const reply = hagaRespond(text);
+    hagaRenderMsg(reply, 'bot');
+  }, 400 + Math.random() * 400);
+}
+
+function hagaQuick(cmd) {
+  document.getElementById('hagaInput').value = cmd;
+  hagaSend();
+}
+
+function hagaToggle() {
+  const panel = document.getElementById('hagaPanel');
+  const trigger = document.getElementById('hagaTrigger');
+  const isOpen = panel.classList.contains('haga-panel--open');
+  if (isOpen) {
+    panel.classList.remove('haga-panel--open');
+    trigger.style.display = 'flex';
+  } else {
+    trigger.style.display = 'none';
+    panel.style.display = 'flex';
+    requestAnimationFrame(() => panel.classList.add('haga-panel--open'));
+    setTimeout(() => document.getElementById('hagaInput').focus(), 250);
+  }
+}
+
+function hagaWelcome() {
+  const w = hagaCurrentWeek();
+  const intro = w
+    ? `Oi, eu sou o <strong>HAGA</strong> — operador Hagajota da Startfix.
+
+Acabei de olhar o painel: última semana de <strong>${formatDate(w.current.date)}</strong>${w.current.responsavel ? ` (${w.current.responsavel})` : ''}, conversão de ${w.current.conversao}%${w.current.valor ? `, R$ ${w.current.valor.toLocaleString('pt-BR')} faturados` : ''}.
+
+Como posso ajudar agora?`
+    : `Oi, eu sou o <strong>HAGA</strong> — operador Hagajota da Startfix.
+
+Ainda não tem semana registrada. Sincroniza a planilha (botão 🔄 lá em cima) e me chama de novo que eu já dou o primeiro diagnóstico.
+
+Enquanto isso, posso te mostrar os scripts de WhatsApp ou o posicionamento. Digita <strong>/help</strong> pra ver tudo.`;
+  hagaRenderMsg(intro, 'bot');
+}
+
+function hagaInit() {
+  const msgs = hagaLoadMsgs();
+  if (msgs.length === 0) {
+    hagaWelcome();
+  } else {
+    msgs.forEach(m => hagaRenderMsg(m.text, m.who, false));
+  }
+}
+
 // ─── INIT ───────────────────────────────────────────────────────────────
 (function init() {
   // Set today's date on the form
@@ -1804,6 +2569,7 @@ function resetAll() {
   renderCampaigns();
   renderChecklist();
   renderPhases();
+  hagaInit();
 
   // Auto-sync com a planilha do Google (silencioso)
   // Só puxa se: nunca puxou, OU já é fonte 'sheet' (atualizar)
