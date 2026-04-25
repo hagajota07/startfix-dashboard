@@ -365,7 +365,7 @@
     /* ─── CAMPAIGN TRACKER ────────────────────────────────────────────────── */
     .campaign-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
       gap: 12px;
     }
     .campaign-card {
@@ -478,6 +478,93 @@
     }
     .ritual-box__text strong { color: var(--text); }
 
+    /* ─── PLANO 90D (FASES) ──────────────────────────────────────────────── */
+    .seed-banner {
+      background: rgba(255,214,10,.06);
+      border: 1px solid rgba(255,214,10,.25);
+      border-radius: var(--radius-sm);
+      padding: 14px 18px;
+      margin-bottom: 24px;
+      display: flex; align-items: center; gap: 12px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .seed-banner strong { color: var(--color-yellow); }
+    .seed-banner__icon { font-size: 18px; }
+
+    .phase-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+    }
+    .phase-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+      transition: all .25s;
+    }
+    .phase-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--text-dim);
+    }
+    .phase-card--current::before { background: var(--color-primary); }
+    .phase-card--current { border-color: var(--border-accent); background: rgba(255,85,0,.03); }
+    .phase-card--done::before { background: var(--color-green); }
+    .phase-card--done { opacity: .65; }
+    .phase-card__num {
+      font-family: var(--font-display);
+      font-size: 56px; line-height: 1;
+      color: var(--text-dim);
+      letter-spacing: 2px;
+    }
+    .phase-card--current .phase-card__num { color: var(--color-primary); }
+    .phase-card--done .phase-card__num { color: var(--color-green); }
+    .phase-card__title {
+      font-family: var(--font-display);
+      font-size: 22px; letter-spacing: 1px;
+      margin: 8px 0 4px;
+    }
+    .phase-card__weeks {
+      font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 1px;
+      color: var(--text-dim);
+      margin-bottom: 16px;
+    }
+    .phase-card__list { list-style: none; }
+    .phase-card__list li {
+      font-size: 13px;
+      color: var(--text-muted);
+      padding: 6px 0 6px 18px;
+      position: relative;
+      line-height: 1.5;
+    }
+    .phase-card__list li::before {
+      content: '→';
+      position: absolute; left: 0;
+      color: var(--color-primary);
+      font-weight: 700;
+    }
+    .phase-card__badge {
+      position: absolute; top: 16px; right: 16px;
+      font-size: 10px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 1px;
+      padding: 4px 10px;
+      border-radius: 100px;
+    }
+    .phase-card__badge--current {
+      background: var(--color-primary-dim);
+      color: var(--color-primary);
+    }
+    .phase-card__badge--done {
+      background: var(--color-green-dim);
+      color: var(--color-green);
+    }
+
     /* ─── HISTORY TABLE ───────────────────────────────────────────────────── */
     .history-table {
       width: 100%;
@@ -551,6 +638,7 @@
         <button class="nav__tab nav__tab--active" data-tab="dashboard">Dashboard</button>
         <button class="nav__tab" data-tab="input">Registrar Semana</button>
         <button class="nav__tab" data-tab="campaigns">Campanhas</button>
+        <button class="nav__tab" data-tab="plano">Plano 90d</button>
         <button class="nav__tab" data-tab="checklist">Semana 1</button>
         <button class="nav__tab" data-tab="history">Histórico</button>
       </div>
@@ -575,6 +663,16 @@
           <select class="nav__week-select" id="weekSelector">
             <option value="current">Última registrada</option>
           </select>
+        </div>
+      </div>
+
+      <!-- Seed banner (some when data is just placeholders) -->
+      <div class="seed-banner" id="seedBanner" style="display:none;">
+        <span class="seed-banner__icon">⚠️</span>
+        <div>
+          <strong>Linha de base estimada</strong> — os dados visíveis são uma simulação das 4 semanas pré-Hagajota
+          para você testar o painel. Substitua pelos números reais do Jorge clicando em <strong>Registrar Semana</strong>
+          ou apague tudo no botão <strong>⟲ Reset</strong> do topo.
         </div>
       </div>
 
@@ -793,6 +891,29 @@
 </div>
 
 <!-- ══════════════════════════════════════════════════════════════════════ -->
+<!-- TAB: PLANO 90D                                                        -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<div class="tab-content" id="tab-plano">
+  <section class="section">
+    <div class="container">
+      <p class="section-label">Execução · Hagajota Studio</p>
+      <h2 class="section-title">PLANO 90 DIAS</h2>
+      <p style="font-size:13px;color:var(--text-muted);margin:8px 0 32px;">5 fases · 12 semanas · do diagnóstico ao ritmo operacional. Espelho do Plano-Projeto-Startfix-2026.docx.</p>
+
+      <div class="phase-grid" id="phaseGrid"></div>
+
+      <div class="ritual-box" style="margin-top:32px;">
+        <p class="ritual-box__title">INVESTIMENTO</p>
+        <p class="ritual-box__text">
+          <strong>R$ 6.000 em 3 parcelas de R$ 2.000</strong> — uma ao final de cada bloco de 30 dias.
+          Entregáveis: diagnóstico + posicionamento + identidade verbal · funil WhatsApp + calendário 2026 + plano de canais · design system + landing institucional.
+        </p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
 <!-- TAB: SEMANA 1                                                         -->
 <!-- ══════════════════════════════════════════════════════════════════════ -->
 <div class="tab-content" id="tab-checklist">
@@ -843,15 +964,24 @@ function saveData(data) {
 
 // ─── CAMPAIGNS DATA ──────────────────────────────────────────────────────
 const CAMPAIGNS = [
-  { id: 'maes', name: 'Dia das Mães', date: '10/05/2026', quarter: 'Q2' },
-  { id: 'namorados', name: 'Dia dos Namorados', date: '12/06/2026', quarter: 'Q2' },
-  { id: 'saojoao', name: 'São João', date: '24/06/2026', quarter: 'Q2' },
-  { id: 'pais', name: 'Dia dos Pais', date: '09/08/2026', quarter: 'Q3' },
-  { id: 'estudante', name: 'Dia do Estudante', date: '11/08/2026', quarter: 'Q3' },
-  { id: 'cliente', name: 'Dia do Cliente', date: '15/09/2026', quarter: 'Q3' },
-  { id: 'criancas', name: 'Dia das Crianças', date: '12/10/2026', quarter: 'Q4' },
-  { id: 'blackfriday', name: 'Black Friday', date: '27/11/2026', quarter: 'Q4' },
-  { id: 'natal', name: 'Natal', date: '25/12/2026', quarter: 'Q4' },
+  { id: 'maes',        name: 'Dia das Mães',       date: '10/05/2026', quarter: 'Q2',
+    offer: 'Combo "presente da mãe": tela + película + capa',          channel: 'LED outdoor + Instagram' },
+  { id: 'namorados',   name: 'Dia dos Namorados',  date: '12/06/2026', quarter: 'Q2',
+    offer: 'Reparo casal: 2 aparelhos = 15% off',                       channel: 'Instagram Reels' },
+  { id: 'saojoao',     name: 'São João',           date: '24/06/2026', quarter: 'Q2',
+    offer: 'Reparo expresso pré-feriado · 24h',                          channel: 'WhatsApp base' },
+  { id: 'pais',        name: 'Dia dos Pais',       date: '09/08/2026', quarter: 'Q3',
+    offer: 'Upgrade pai: troca de bateria + limpeza interna',           channel: 'WhatsApp base + LED' },
+  { id: 'estudante',   name: 'Dia do Estudante',   date: '11/08/2026', quarter: 'Q3',
+    offer: 'Check-up grátis em iPad/MacBook escolar',                   channel: 'Instagram + GMN' },
+  { id: 'cliente',     name: 'Mês PJ · Dia do Cliente', date: '15/09/2026', quarter: 'Q3',
+    offer: 'Contratos PJ com 1º mês grátis · SLA 1h',                   channel: 'Prospecção LinkedIn' },
+  { id: 'criancas',    name: 'Dia das Crianças',   date: '12/10/2026', quarter: 'Q4',
+    offer: 'Kit infantil: película anti-impacto + capa',                channel: 'Instagram + GMN' },
+  { id: 'blackfriday', name: 'Black Friday',       date: '27/11/2026', quarter: 'Q4',
+    offer: 'Reparo + acessório com 30% off · estoque limitado',          channel: 'Todos os canais' },
+  { id: 'natal',       name: 'Natal/Réveillon',    date: '25/12/2026', quarter: 'Q4',
+    offer: '"Vai viajar?" — check-up pré-viagem grátis',                channel: 'Instagram + WhatsApp' },
 ];
 
 function loadCampaigns() {
@@ -859,6 +989,90 @@ function loadCampaigns() {
   catch { return {}; }
 }
 function saveCampaigns(data) { localStorage.setItem(CAMPAIGNS_KEY, JSON.stringify(data)); }
+
+// ─── PLANO 90D · FASES ───────────────────────────────────────────────────
+const PHASES = [
+  {
+    n: '01',
+    title: 'Diagnóstico & Fundação',
+    weeks: 'Semanas 1–2',
+    status: 'current',
+    items: [
+      'Briefing M.A.R.C.A. com Jorge',
+      'Coleta de pendentes: faturamento, ticket médio, equipe, % Apple/Samsung',
+      'Auditoria de canais: Instagram, WhatsApp, GMN',
+    ],
+  },
+  {
+    n: '02',
+    title: 'Identidade Verbal',
+    weeks: 'Semanas 3–4',
+    status: 'pending',
+    items: [
+      'Manifesto, tom de voz e mensagens-chave',
+      'Validação da frase-bandeira "A oficial. As outras são alternativa."',
+      'Glossário do tom (palavras a evitar e a usar)',
+    ],
+  },
+  {
+    n: '03',
+    title: 'Estratégia Comercial',
+    weeks: 'Semanas 5–7',
+    status: 'pending',
+    items: [
+      'Funil de WhatsApp: 3 perfis (Urgência · Frota PJ · Reativação)',
+      'Calendário 2026 com peças prontas (3 primeiros meses)',
+      'Scripts e gatilhos por etapa',
+    ],
+  },
+  {
+    n: '04',
+    title: 'Design System & Landing',
+    weeks: 'Semanas 8–10',
+    status: 'pending',
+    items: [
+      'globals.css com tokens Startfix (laranja #FF5500 + dark)',
+      'Landing page institucional consumindo o design system',
+      'Componentes: hero, cards, formulário, footer',
+    ],
+  },
+  {
+    n: '05',
+    title: 'Lançamento & Ritmo',
+    weeks: 'Semanas 11–12',
+    status: 'pending',
+    items: [
+      'Go-live de canais reposicionados',
+      'Ritual de segunda 9h: revisão semanal de KPIs',
+      'Handoff operacional para o time da Startfix',
+    ],
+  },
+];
+
+function renderPhases() {
+  const grid = document.getElementById('phaseGrid');
+  grid.innerHTML = PHASES.map(p => {
+    const cls = p.status === 'current' ? 'phase-card--current'
+              : p.status === 'done'    ? 'phase-card--done'
+              : '';
+    const badge = p.status === 'current'
+      ? '<span class="phase-card__badge phase-card__badge--current">Em curso</span>'
+      : p.status === 'done'
+      ? '<span class="phase-card__badge phase-card__badge--done">✓ Concluída</span>'
+      : '';
+    return `
+      <div class="phase-card ${cls}">
+        ${badge}
+        <div class="phase-card__num">${p.n}</div>
+        <h3 class="phase-card__title">${p.title.toUpperCase()}</h3>
+        <p class="phase-card__weeks">${p.weeks}</p>
+        <ul class="phase-card__list">
+          ${p.items.map(i => `<li>${i}</li>`).join('')}
+        </ul>
+      </div>
+    `;
+  }).join('');
+}
 
 // ─── CHECKLIST DATA ──────────────────────────────────────────────────────
 const CHECKLIST = [
@@ -888,6 +1102,7 @@ document.querySelectorAll('.nav__tab').forEach(btn => {
     document.getElementById('tab-' + btn.dataset.tab).classList.add('tab-content--active');
     if (btn.dataset.tab === 'dashboard') refreshDashboard();
     if (btn.dataset.tab === 'history') renderHistory();
+    if (btn.dataset.tab === 'plano') renderPhases();
   });
 });
 
@@ -926,6 +1141,7 @@ function saveWeek() {
 
   data.sort((a, b) => a.date.localeCompare(b.date));
   saveData(data);
+  clearSeedFlag(); // dados reais entraram → some o banner
   showToast('Semana salva com sucesso');
   refreshDashboard();
   updateWeekSelector();
@@ -967,6 +1183,7 @@ let chartConversao, chartOrigem, chartTempo, chartModos;
 
 function refreshDashboard() {
   const data = loadData();
+  document.getElementById('seedBanner').style.display = isSeedOnly() ? 'flex' : 'none';
   if (data.length === 0) return renderEmptyDashboard();
 
   const sel = document.getElementById('weekSelector').value;
@@ -1199,6 +1416,12 @@ function renderCampaigns() {
       <div class="campaign-card ${cls}" onclick="toggleCampaign('${c.id}')">
         <p class="campaign-card__date">${c.quarter} · ${c.date}</p>
         <p class="campaign-card__name">${c.name}</p>
+        <p style="font-size:11px;color:var(--text-muted);line-height:1.4;margin:8px 0 6px;">
+          <strong style="color:var(--color-primary);font-weight:700;">Oferta:</strong> ${c.offer}
+        </p>
+        <p style="font-size:10px;color:var(--text-dim);margin-bottom:10px;">
+          📣 ${c.channel}
+        </p>
         <p class="campaign-card__status ${statusCls}">${statusText}</p>
       </div>
     `;
@@ -1340,9 +1563,22 @@ const SEED_DATA = [
 // Itens da Semana 1 que a Hagajota já preparou antes do kick-off
 const SEED_CHECKS = { 1: true, 2: true, 7: true };
 
+const SEED_FLAG_KEY = 'startfix_is_seed';
+
 function seedIfEmpty() {
-  if (loadData().length === 0) saveData(SEED_DATA);
+  if (loadData().length === 0) {
+    saveData(SEED_DATA);
+    localStorage.setItem(SEED_FLAG_KEY, '1');
+  }
   if (Object.keys(loadChecks()).length === 0) saveChecks(SEED_CHECKS);
+}
+
+function isSeedOnly() {
+  return localStorage.getItem(SEED_FLAG_KEY) === '1';
+}
+
+function clearSeedFlag() {
+  localStorage.removeItem(SEED_FLAG_KEY);
 }
 
 function resetAll() {
@@ -1364,6 +1600,7 @@ function resetAll() {
   refreshDashboard();
   renderCampaigns();
   renderChecklist();
+  renderPhases();
 })();
 </script>
 </body>
