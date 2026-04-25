@@ -1,0 +1,1367 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Startfix — Painel de Gestão · Hagajota Studio</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    /* ─── TOKENS ─────────────────────────────────────────────────────────── */
+    :root {
+      --bg:            #090909;
+      --bg-card:       #111111;
+      --bg-card-alt:   #161616;
+      --bg-section:    #0D0D0D;
+      --bg-input:      #1A1A1A;
+      --border:        rgba(255,255,255,.07);
+      --border-accent: rgba(255,90,0,.35);
+
+      --color-primary: #FF5500;
+      --color-primary-dim: rgba(255,85,0,.15);
+      --color-primary-glow: rgba(255,85,0,.35);
+      --color-green:   #30D158;
+      --color-green-dim: rgba(48,209,88,.12);
+      --color-blue:    #0A84FF;
+      --color-blue-dim: rgba(10,132,255,.12);
+      --color-yellow:  #FFD60A;
+      --color-yellow-dim: rgba(255,214,10,.12);
+      --color-purple:  #BF5AF2;
+      --color-purple-dim: rgba(191,90,242,.12);
+      --color-red:     #FF453A;
+      --color-red-dim: rgba(255,69,58,.12);
+
+      --text:          #F5F5F7;
+      --text-muted:    #8E8E93;
+      --text-dim:      #48484A;
+
+      --font-display:  'Bebas Neue', sans-serif;
+      --font-body:     'Plus Jakarta Sans', sans-serif;
+
+      --radius:        16px;
+      --radius-sm:     10px;
+      --radius-xs:     6px;
+      --gap:           8px;
+    }
+
+    /* ─── RESET ──────────────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: inherit; text-decoration: none; }
+
+    /* ─── LAYOUT ─────────────────────────────────────────────────────────── */
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+    /* ─── NAV ────────────────────────────────────────────────────────────── */
+    .nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(9,9,9,.92);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 24px;
+    }
+    .nav__inner {
+      max-width: 1200px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav__left { display: flex; align-items: center; gap: 16px; }
+    .nav__logo {
+      font-family: var(--font-display);
+      font-size: 22px; letter-spacing: 2px;
+      color: var(--color-primary);
+    }
+    .nav__badge {
+      font-size: 10px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 1px;
+      color: var(--text-dim);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 4px 10px;
+    }
+    .nav__right { display: flex; align-items: center; gap: 20px; }
+    .nav__tabs { display: flex; gap: 4px; list-style: none; }
+    .nav__tab {
+      font-size: 12px; font-weight: 600;
+      color: var(--text-muted);
+      padding: 6px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all .2s;
+      border: none; background: none;
+    }
+    .nav__tab:hover { color: var(--text); background: rgba(255,255,255,.05); }
+    .nav__tab--active { color: var(--color-primary); background: var(--color-primary-dim); }
+    .nav__week-select {
+      font-family: var(--font-body);
+      font-size: 12px; font-weight: 600;
+      color: var(--text);
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 12px;
+      cursor: pointer;
+    }
+
+    /* ─── SECTIONS ────────────────────────────────────────────────────────── */
+    .section { padding: 48px 0; }
+    .section-header {
+      display: flex; align-items: flex-end; justify-content: space-between;
+      margin-bottom: 32px; gap: 16px;
+    }
+    .section-label {
+      font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 1.5px;
+      color: var(--color-primary);
+      margin-bottom: 6px;
+    }
+    .section-title {
+      font-family: var(--font-display);
+      font-size: 36px; line-height: 1;
+      letter-spacing: 1px;
+    }
+
+    /* ─── KPI CARDS ───────────────────────────────────────────────────────── */
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 40px;
+    }
+    .kpi-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+    .kpi-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 3px;
+    }
+    .kpi-card--orange::before { background: var(--color-primary); }
+    .kpi-card--green::before  { background: var(--color-green); }
+    .kpi-card--yellow::before { background: var(--color-yellow); }
+    .kpi-card--purple::before { background: var(--color-purple); }
+    .kpi-card__label {
+      font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 1px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+    .kpi-card__value {
+      font-family: var(--font-display);
+      font-size: 48px; line-height: 1;
+      margin-bottom: 4px;
+    }
+    .kpi-card__unit {
+      font-size: 20px;
+      opacity: .6;
+    }
+    .kpi-card__meta {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 8px;
+    }
+    .kpi-card__trend {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 11px; font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 100px;
+    }
+    .kpi-card__trend--up { color: var(--color-green); background: var(--color-green-dim); }
+    .kpi-card__trend--down { color: var(--color-red); background: var(--color-red-dim); }
+    .kpi-card__trend--neutral { color: var(--text-muted); background: rgba(255,255,255,.05); }
+
+    /* ─── TABS CONTENT ────────────────────────────────────────────────────── */
+    .tab-content { display: none; }
+    .tab-content--active { display: block; }
+
+    /* ─── FORM / INPUT ────────────────────────────────────────────────────── */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    .form-group {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 20px;
+    }
+    .form-group--highlight {
+      border-color: var(--border-accent);
+      background: rgba(255,85,0,.03);
+    }
+    .form-group__label {
+      font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .8px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+    .form-group__hint {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-bottom: 10px;
+    }
+    .form-group__row {
+      display: flex; gap: 8px; align-items: center;
+    }
+    .form-input {
+      width: 100%;
+      font-family: var(--font-body);
+      font-size: 24px; font-weight: 700;
+      color: var(--text);
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xs);
+      padding: 10px 14px;
+      transition: border-color .2s;
+    }
+    .form-input:focus {
+      outline: none;
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px var(--color-primary-dim);
+    }
+    .form-input--small {
+      font-size: 16px;
+      padding: 8px 12px;
+    }
+    .form-unit {
+      font-size: 14px; font-weight: 600;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+    .form-section-title {
+      font-family: var(--font-display);
+      font-size: 20px; letter-spacing: 1px;
+      color: var(--text-muted);
+      margin: 32px 0 16px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+    }
+    .form-section-title:first-of-type { margin-top: 0; border-top: none; padding-top: 0; }
+
+    .btn {
+      font-family: var(--font-body);
+      font-size: 14px; font-weight: 700;
+      padding: 14px 32px;
+      border: none; border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all .2s;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+    .btn--primary {
+      background: var(--color-primary);
+      color: #fff;
+    }
+    .btn--primary:hover { background: #e64d00; transform: translateY(-1px); }
+    .btn--ghost {
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+    }
+    .btn--ghost:hover { border-color: var(--text-muted); color: var(--text); }
+    .btn-row {
+      display: flex; gap: 12px; justify-content: flex-end;
+      margin-top: 32px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+    }
+
+    /* ─── CHARTS ──────────────────────────────────────────────────────────── */
+    .chart-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .chart-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+    }
+    .chart-card__title {
+      font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 1px;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+    }
+    .chart-card canvas { width: 100% !important; }
+
+    /* ─── ALERTS ──────────────────────────────────────────────────────────── */
+    .alert-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+    .alert-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 20px;
+      display: flex; gap: 14px;
+      align-items: flex-start;
+      transition: all .3s;
+    }
+    .alert-card--ok { border-color: rgba(48,209,88,.2); }
+    .alert-card--warn { border-color: rgba(255,214,10,.3); background: rgba(255,214,10,.03); }
+    .alert-card--danger { border-color: rgba(255,69,58,.3); background: rgba(255,69,58,.04); }
+    .alert-card--neutral { border-color: var(--border); }
+    .alert-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 4px;
+    }
+    .alert-dot--ok { background: var(--color-green); box-shadow: 0 0 8px rgba(48,209,88,.4); }
+    .alert-dot--warn { background: var(--color-yellow); box-shadow: 0 0 8px rgba(255,214,10,.4); }
+    .alert-dot--danger { background: var(--color-red); box-shadow: 0 0 8px rgba(255,69,58,.4); animation: pulse-alert 2s infinite; }
+    .alert-dot--neutral { background: var(--text-dim); }
+    @keyframes pulse-alert {
+      0%, 100% { opacity: 1; }
+      50% { opacity: .4; }
+    }
+    .alert-card__content { flex: 1; }
+    .alert-card__if {
+      font-size: 12px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .5px;
+      margin-bottom: 6px;
+    }
+    .alert-card__if--ok { color: var(--color-green); }
+    .alert-card__if--warn { color: var(--color-yellow); }
+    .alert-card__if--danger { color: var(--color-red); }
+    .alert-card__if--neutral { color: var(--text-dim); }
+    .alert-card__then {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .alert-card__then strong { color: var(--text); }
+
+    /* ─── CAMPAIGN TRACKER ────────────────────────────────────────────────── */
+    .campaign-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px;
+    }
+    .campaign-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 16px;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .campaign-card:hover { border-color: rgba(255,255,255,.15); }
+    .campaign-card--done { border-color: rgba(48,209,88,.25); }
+    .campaign-card--active { border-color: var(--border-accent); background: rgba(255,85,0,.03); }
+    .campaign-card--upcoming { opacity: .6; }
+    .campaign-card__date {
+      font-size: 10px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 1px;
+      color: var(--text-dim);
+      margin-bottom: 6px;
+    }
+    .campaign-card__name {
+      font-size: 14px; font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .campaign-card__status {
+      font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .5px;
+    }
+    .campaign-card__status--done { color: var(--color-green); }
+    .campaign-card__status--active { color: var(--color-primary); }
+    .campaign-card__status--upcoming { color: var(--text-dim); }
+
+    /* ─── CHECKLIST (Semana 1) ────────────────────────────────────────────── */
+    .check-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    .check-item {
+      display: flex; align-items: center; gap: 12px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px 18px;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .check-item:hover { border-color: rgba(255,255,255,.12); }
+    .check-item--done { opacity: .5; }
+    .check-item--done .check-item__text { text-decoration: line-through; }
+    .check-box {
+      width: 22px; height: 22px;
+      border: 2px solid var(--text-dim);
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      transition: all .2s;
+    }
+    .check-item--done .check-box {
+      background: var(--color-green);
+      border-color: var(--color-green);
+    }
+    .check-box__icon { display: none; color: #000; font-size: 14px; font-weight: 800; }
+    .check-item--done .check-box__icon { display: block; }
+    .check-item__text { font-size: 14px; font-weight: 500; }
+    .check-item__day {
+      font-size: 10px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 1px;
+      color: var(--text-dim);
+      margin-left: auto;
+      white-space: nowrap;
+    }
+
+    /* ─── PROGRESS BAR ────────────────────────────────────────────────────── */
+    .progress-bar {
+      width: 100%;
+      height: 6px;
+      background: rgba(255,255,255,.06);
+      border-radius: 100px;
+      overflow: hidden;
+      margin-top: 16px;
+    }
+    .progress-bar__fill {
+      height: 100%;
+      border-radius: 100px;
+      background: var(--color-green);
+      transition: width .5s ease;
+    }
+    .progress-label {
+      font-size: 12px; font-weight: 600;
+      color: var(--text-muted);
+      margin-top: 8px;
+      text-align: right;
+    }
+
+    /* ─── RITUAL BOX ──────────────────────────────────────────────────────── */
+    .ritual-box {
+      background: rgba(48,209,88,.04);
+      border: 1px solid rgba(48,209,88,.2);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-top: 40px;
+    }
+    .ritual-box__title {
+      font-family: var(--font-display);
+      font-size: 20px; letter-spacing: 1px;
+      color: var(--color-green);
+      margin-bottom: 8px;
+    }
+    .ritual-box__text {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+    .ritual-box__text strong { color: var(--text); }
+
+    /* ─── HISTORY TABLE ───────────────────────────────────────────────────── */
+    .history-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .history-table th {
+      text-align: left;
+      font-size: 10px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 1px;
+      color: var(--text-dim);
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .history-table td {
+      padding: 12px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-muted);
+    }
+    .history-table tr:hover td { color: var(--text); background: rgba(255,255,255,.02); }
+
+    /* ─── TOAST ────────────────────────────────────────────────────────────── */
+    .toast {
+      position: fixed; bottom: 32px; right: 32px;
+      background: var(--color-green);
+      color: #000;
+      font-size: 13px; font-weight: 700;
+      padding: 14px 24px;
+      border-radius: var(--radius-sm);
+      transform: translateY(80px);
+      opacity: 0;
+      transition: all .4s cubic-bezier(.16,1,.3,1);
+      z-index: 999;
+    }
+    .toast--visible { transform: translateY(0); opacity: 1; }
+
+    /* ─── EMPTY STATE ─────────────────────────────────────────────────────── */
+    .empty-state {
+      text-align: center;
+      padding: 64px 24px;
+      color: var(--text-dim);
+    }
+    .empty-state__icon { font-size: 48px; margin-bottom: 16px; }
+    .empty-state__text { font-size: 14px; }
+
+    /* ─── RESPONSIVE ──────────────────────────────────────────────────────── */
+    @media (max-width: 900px) {
+      .kpi-row { grid-template-columns: repeat(2, 1fr); }
+      .form-grid { grid-template-columns: repeat(2, 1fr); }
+      .chart-grid { grid-template-columns: 1fr; }
+      .alert-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 600px) {
+      .kpi-row { grid-template-columns: 1fr; }
+      .form-grid { grid-template-columns: 1fr; }
+      .nav__tabs { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ░░ NAV ░░ -->
+<nav class="nav">
+  <div class="nav__inner">
+    <div class="nav__left">
+      <span class="nav__logo">STARTFIX</span>
+      <span class="nav__badge">Painel Interno · Hagajota</span>
+    </div>
+    <div class="nav__right">
+      <div class="nav__tabs">
+        <button class="nav__tab nav__tab--active" data-tab="dashboard">Dashboard</button>
+        <button class="nav__tab" data-tab="input">Registrar Semana</button>
+        <button class="nav__tab" data-tab="campaigns">Campanhas</button>
+        <button class="nav__tab" data-tab="checklist">Semana 1</button>
+        <button class="nav__tab" data-tab="history">Histórico</button>
+      </div>
+      <button onclick="resetAll()" title="Limpar todos os dados (reset)" style="background:none;border:1px solid var(--border);color:var(--text-dim);font-size:11px;padding:6px 10px;border-radius:8px;cursor:pointer;margin-left:16px;">⟲ Reset</button>
+    </div>
+  </div>
+</nav>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!-- TAB: DASHBOARD                                                        -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<div class="tab-content tab-content--active" id="tab-dashboard">
+  <section class="section">
+    <div class="container">
+      <div class="section-header">
+        <div>
+          <p class="section-label">Visão geral</p>
+          <h2 class="section-title">PAINEL DE GESTÃO</h2>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <span style="font-size:12px;color:var(--text-dim);">Semana:</span>
+          <select class="nav__week-select" id="weekSelector">
+            <option value="current">Última registrada</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- KPIs -->
+      <div class="kpi-row">
+        <div class="kpi-card kpi-card--orange">
+          <div class="kpi-card__label">Tempo de Resposta</div>
+          <div class="kpi-card__value" style="color:var(--color-primary);" id="kpi-tempo">—<span class="kpi-card__unit">min</span></div>
+          <div class="kpi-card__meta">Meta: &lt; 10 min · <span id="kpi-tempo-trend" class="kpi-card__trend kpi-card__trend--neutral">sem dados</span></div>
+        </div>
+        <div class="kpi-card kpi-card--green">
+          <div class="kpi-card__label">Conversão Lead → Cliente</div>
+          <div class="kpi-card__value" style="color:var(--color-green);" id="kpi-conversao">—<span class="kpi-card__unit">%</span></div>
+          <div class="kpi-card__meta">Meta: 60% · <span id="kpi-conversao-trend" class="kpi-card__trend kpi-card__trend--neutral">sem dados</span></div>
+        </div>
+        <div class="kpi-card kpi-card--yellow">
+          <div class="kpi-card__label">Avaliações Google</div>
+          <div class="kpi-card__value" style="color:var(--color-yellow);" id="kpi-reviews">—<span class="kpi-card__unit"></span></div>
+          <div class="kpi-card__meta">Meta: 200+ em 90 dias · <span id="kpi-reviews-trend" class="kpi-card__trend kpi-card__trend--neutral">sem dados</span></div>
+        </div>
+        <div class="kpi-card kpi-card--purple">
+          <div class="kpi-card__label">Campanhas este Trimestre</div>
+          <div class="kpi-card__value" style="color:var(--color-purple);" id="kpi-campanhas">—<span class="kpi-card__unit">/4</span></div>
+          <div class="kpi-card__meta">Meta: 4 por trimestre · <span id="kpi-campanhas-trend" class="kpi-card__trend kpi-card__trend--neutral">—</span></div>
+        </div>
+      </div>
+
+      <!-- CHARTS -->
+      <div class="chart-grid">
+        <div class="chart-card">
+          <div class="chart-card__title">Conversão semanal — Lead → Cliente (%)</div>
+          <canvas id="chartConversao" height="220"></canvas>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card__title">Leads por Origem</div>
+          <canvas id="chartOrigem" height="220"></canvas>
+        </div>
+      </div>
+      <div class="chart-grid" style="grid-template-columns: 1fr 1fr;">
+        <div class="chart-card">
+          <div class="chart-card__title">Tempo de Resposta — Evolução (min)</div>
+          <canvas id="chartTempo" height="180"></canvas>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card__title">Conversão: Modo Padrão vs Agressivo (%)</div>
+          <canvas id="chartModos" height="180"></canvas>
+        </div>
+      </div>
+
+      <!-- ALERTS -->
+      <div style="margin-top:48px;">
+        <p class="section-label" style="color:var(--color-yellow);">Painel de decisão</p>
+        <h3 class="section-title" style="font-size:28px;margin-bottom:24px;">ALERTAS IF/THEN</h3>
+        <div class="alert-grid" id="alertGrid">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- RITUAL -->
+      <div class="ritual-box">
+        <p class="ritual-box__title">RITUAL DE SEGUNDA — 9H</p>
+        <p class="ritual-box__text">
+          Abrir este painel, revisar os 6 alertas acima e decidir <strong>1 único ajuste</strong> da semana. Nunca mais de um — foco é disciplina, não quantidade.
+          Com 52 ajustes por ano, o sistema evolui sozinho.
+        </p>
+      </div>
+
+    </div>
+  </section>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!-- TAB: REGISTRAR SEMANA                                                 -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<div class="tab-content" id="tab-input">
+  <section class="section">
+    <div class="container">
+      <div class="section-header">
+        <div>
+          <p class="section-label">Entrada de dados</p>
+          <h2 class="section-title">REGISTRAR SEMANA</h2>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <label style="font-size:12px;color:var(--text-dim);">Data:</label>
+          <input type="date" id="inputDate" class="nav__week-select" style="font-family:var(--font-body);">
+        </div>
+      </div>
+
+      <p class="form-section-title">MÉTRICAS CRÍTICAS</p>
+      <div class="form-grid">
+        <div class="form-group form-group--highlight">
+          <div class="form-group__label">Tempo médio de resposta</div>
+          <div class="form-group__hint">Meta: &lt; 10 min · WhatsApp</div>
+          <div class="form-group__row">
+            <input type="number" class="form-input" id="f-tempo" placeholder="0" min="0" step="1">
+            <span class="form-unit">min</span>
+          </div>
+        </div>
+        <div class="form-group form-group--highlight">
+          <div class="form-group__label">Leads recebidos</div>
+          <div class="form-group__hint">Total da semana · todos os canais</div>
+          <input type="number" class="form-input" id="f-leads" placeholder="0" min="0">
+        </div>
+        <div class="form-group form-group--highlight">
+          <div class="form-group__label">Leads fechados</div>
+          <div class="form-group__hint">Conversões confirmadas da semana</div>
+          <input type="number" class="form-input" id="f-fechados" placeholder="0" min="0">
+        </div>
+      </div>
+
+      <p class="form-section-title">ORIGEM DOS LEADS</p>
+      <div class="form-grid" style="grid-template-columns: repeat(4,1fr);">
+        <div class="form-group">
+          <div class="form-group__label">Google</div>
+          <div class="form-group__hint">GMB + orgânico</div>
+          <input type="number" class="form-input form-input--small" id="f-origem-google" placeholder="0" min="0">
+        </div>
+        <div class="form-group">
+          <div class="form-group__label">Instagram</div>
+          <div class="form-group__hint">Bio + stories + DM</div>
+          <input type="number" class="form-input form-input--small" id="f-origem-ig" placeholder="0" min="0">
+        </div>
+        <div class="form-group">
+          <div class="form-group__label">Indicação</div>
+          <div class="form-group__hint">Boca a boca</div>
+          <input type="number" class="form-input form-input--small" id="f-origem-indicacao" placeholder="0" min="0">
+        </div>
+        <div class="form-group">
+          <div class="form-group__label">LED / Fachada</div>
+          <div class="form-group__hint">Painel físico</div>
+          <input type="number" class="form-input form-input--small" id="f-origem-led" placeholder="0" min="0">
+        </div>
+      </div>
+
+      <p class="form-section-title">CONVERSÃO POR MODO</p>
+      <div class="form-grid" style="grid-template-columns: repeat(2,1fr);">
+        <div class="form-group">
+          <div class="form-group__label">Modo Padrão — Conversão</div>
+          <div class="form-group__hint">Meta: &gt; 25%</div>
+          <div class="form-group__row">
+            <input type="number" class="form-input" id="f-conv-padrao" placeholder="0" min="0" max="100">
+            <span class="form-unit">%</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <div class="form-group__label">Modo Agressivo — Conversão</div>
+          <div class="form-group__hint">Meta: &gt; 40%</div>
+          <div class="form-group__row">
+            <input type="number" class="form-input" id="f-conv-agressivo" placeholder="0" min="0" max="100">
+            <span class="form-unit">%</span>
+          </div>
+        </div>
+      </div>
+
+      <p class="form-section-title">CANAIS & ENGAJAMENTO</p>
+      <div class="form-grid">
+        <div class="form-group">
+          <div class="form-group__label">Novas avaliações Google</div>
+          <div class="form-group__hint">Meta: +5 por semana</div>
+          <input type="number" class="form-input form-input--small" id="f-reviews" placeholder="0" min="0">
+        </div>
+        <div class="form-group">
+          <div class="form-group__label">Alcance dos Reels</div>
+          <div class="form-group__hint">Melhor Reel da semana</div>
+          <input type="number" class="form-input form-input--small" id="f-reels" placeholder="0" min="0">
+        </div>
+        <div class="form-group">
+          <div class="form-group__label">Cliques no link da bio</div>
+          <div class="form-group__hint">Instagram → WhatsApp</div>
+          <input type="number" class="form-input form-input--small" id="f-cliques-bio" placeholder="0" min="0">
+        </div>
+        <div class="form-group">
+          <div class="form-group__label">Taxa abertura disparo</div>
+          <div class="form-group__hint">Campanha de reativação</div>
+          <div class="form-group__row">
+            <input type="number" class="form-input form-input--small" id="f-taxa-abertura" placeholder="0" min="0" max="100">
+            <span class="form-unit">%</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <div class="form-group__label">NPS — Satisfação</div>
+          <div class="form-group__hint">Pergunta 5 dias após entrega</div>
+          <input type="number" class="form-input form-input--small" id="f-nps" placeholder="0" min="0" max="100">
+        </div>
+        <div class="form-group">
+          <div class="form-group__label">Tempo até fechamento</div>
+          <div class="form-group__hint">Do "olá" ao "reservado" · Meta: &lt; 15 min</div>
+          <div class="form-group__row">
+            <input type="number" class="form-input form-input--small" id="f-tempo-fechamento" placeholder="0" min="0">
+            <span class="form-unit">min</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn--ghost" onclick="clearForm()">Limpar</button>
+        <button class="btn btn--primary" onclick="saveWeek()">Salvar Semana</button>
+      </div>
+
+    </div>
+  </section>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!-- TAB: CAMPANHAS                                                        -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<div class="tab-content" id="tab-campaigns">
+  <section class="section">
+    <div class="container">
+      <p class="section-label">Calendário Q2–Q4 2026</p>
+      <h2 class="section-title">CAMPANHAS SAZONAIS</h2>
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:32px;">Clique para marcar como concluída. O contador do KPI atualiza automaticamente.</p>
+      <div class="campaign-grid" id="campaignGrid"></div>
+    </div>
+  </section>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!-- TAB: SEMANA 1                                                         -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<div class="tab-content" id="tab-checklist">
+  <section class="section">
+    <div class="container">
+      <p class="section-label" style="color:var(--color-primary);">Execução imediata</p>
+      <h2 class="section-title">SEMANA 1 — CHECKLIST</h2>
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:32px;">27/04 a 01/05/2026 · Clique para marcar como feito.</p>
+      <ul class="check-list" id="checkList"></ul>
+      <div class="progress-bar"><div class="progress-bar__fill" id="checkProgress" style="width:0%"></div></div>
+      <p class="progress-label" id="checkLabel">0 / 9 concluídas</p>
+    </div>
+  </section>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!-- TAB: HISTÓRICO                                                        -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<div class="tab-content" id="tab-history">
+  <section class="section">
+    <div class="container">
+      <p class="section-label">Dados registrados</p>
+      <h2 class="section-title">HISTÓRICO SEMANAL</h2>
+      <div id="historyContent"></div>
+    </div>
+  </section>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">Dados salvos com sucesso</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!-- JAVASCRIPT                                                            -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<script>
+// ─── DATA STORE ──────────────────────────────────────────────────────────
+const STORE_KEY = 'startfix_dashboard';
+const CAMPAIGNS_KEY = 'startfix_campaigns';
+const CHECKS_KEY = 'startfix_checks';
+
+function loadData() {
+  try { return JSON.parse(localStorage.getItem(STORE_KEY)) || []; }
+  catch { return []; }
+}
+function saveData(data) {
+  localStorage.setItem(STORE_KEY, JSON.stringify(data));
+}
+
+// ─── CAMPAIGNS DATA ──────────────────────────────────────────────────────
+const CAMPAIGNS = [
+  { id: 'maes', name: 'Dia das Mães', date: '10/05/2026', quarter: 'Q2' },
+  { id: 'namorados', name: 'Dia dos Namorados', date: '12/06/2026', quarter: 'Q2' },
+  { id: 'saojoao', name: 'São João', date: '24/06/2026', quarter: 'Q2' },
+  { id: 'pais', name: 'Dia dos Pais', date: '09/08/2026', quarter: 'Q3' },
+  { id: 'estudante', name: 'Dia do Estudante', date: '11/08/2026', quarter: 'Q3' },
+  { id: 'cliente', name: 'Dia do Cliente', date: '15/09/2026', quarter: 'Q3' },
+  { id: 'criancas', name: 'Dia das Crianças', date: '12/10/2026', quarter: 'Q4' },
+  { id: 'blackfriday', name: 'Black Friday', date: '27/11/2026', quarter: 'Q4' },
+  { id: 'natal', name: 'Natal', date: '25/12/2026', quarter: 'Q4' },
+];
+
+function loadCampaigns() {
+  try { return JSON.parse(localStorage.getItem(CAMPAIGNS_KEY)) || {}; }
+  catch { return {}; }
+}
+function saveCampaigns(data) { localStorage.setItem(CAMPAIGNS_KEY, JSON.stringify(data)); }
+
+// ─── CHECKLIST DATA ──────────────────────────────────────────────────────
+const CHECKLIST = [
+  { id: 1, text: 'Criar planilha de leads (Google/Notion)', day: 'SEG 27' },
+  { id: 2, text: 'Configurar UTMs para cada canal de origem', day: 'SEG 27' },
+  { id: 3, text: 'Instalar scripts do Funil WhatsApp no celular', day: 'TER 28' },
+  { id: 4, text: 'Treinar atendente no Protocolo de Decisão (tags 🔥🌡❄️)', day: 'TER 28' },
+  { id: 5, text: 'Configurar mensagem de saudação automática no WhatsApp Business', day: 'QUA 29' },
+  { id: 6, text: 'Publicar 1 Reel com CTA direto pro WhatsApp', day: 'QUA 29' },
+  { id: 7, text: 'Atualizar link da bio do Instagram com UTM', day: 'QUI 30' },
+  { id: 8, text: 'Preparar campanha Dia das Mães — texto + criativos', day: 'QUI 30' },
+  { id: 9, text: 'Agendar disparo Dia das Mães para 08/05', day: 'SEX 01' },
+];
+
+function loadChecks() {
+  try { return JSON.parse(localStorage.getItem(CHECKS_KEY)) || {}; }
+  catch { return {}; }
+}
+function saveChecks(data) { localStorage.setItem(CHECKS_KEY, JSON.stringify(data)); }
+
+// ─── TAB NAVIGATION ──────────────────────────────────────────────────────
+document.querySelectorAll('.nav__tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.nav__tab').forEach(b => b.classList.remove('nav__tab--active'));
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('tab-content--active'));
+    btn.classList.add('nav__tab--active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('tab-content--active');
+    if (btn.dataset.tab === 'dashboard') refreshDashboard();
+    if (btn.dataset.tab === 'history') renderHistory();
+  });
+});
+
+// ─── FORM: SAVE WEEK ────────────────────────────────────────────────────
+function saveWeek() {
+  const dateEl = document.getElementById('inputDate');
+  if (!dateEl.value) { dateEl.focus(); return; }
+
+  const entry = {
+    date: dateEl.value,
+    tempo: num('f-tempo'),
+    leads: num('f-leads'),
+    fechados: num('f-fechados'),
+    origemGoogle: num('f-origem-google'),
+    origemIG: num('f-origem-ig'),
+    origemIndicacao: num('f-origem-indicacao'),
+    origemLED: num('f-origem-led'),
+    convPadrao: num('f-conv-padrao'),
+    convAgressivo: num('f-conv-agressivo'),
+    reviews: num('f-reviews'),
+    reels: num('f-reels'),
+    cliquesBio: num('f-cliques-bio'),
+    taxaAbertura: num('f-taxa-abertura'),
+    nps: num('f-nps'),
+    tempoFechamento: num('f-tempo-fechamento'),
+  };
+
+  // Calculate derived
+  entry.conversao = entry.leads > 0 ? Math.round((entry.fechados / entry.leads) * 100) : 0;
+
+  const data = loadData();
+  // Replace if same date exists
+  const idx = data.findIndex(d => d.date === entry.date);
+  if (idx >= 0) data[idx] = entry;
+  else data.push(entry);
+
+  data.sort((a, b) => a.date.localeCompare(b.date));
+  saveData(data);
+  showToast('Semana salva com sucesso');
+  refreshDashboard();
+  updateWeekSelector();
+}
+
+function clearForm() {
+  document.querySelectorAll('#tab-input input[type="number"]').forEach(i => i.value = '');
+}
+
+function num(id) {
+  return parseFloat(document.getElementById(id).value) || 0;
+}
+
+// ─── TOAST ──────────────────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('toast--visible');
+  setTimeout(() => t.classList.remove('toast--visible'), 2500);
+}
+
+// ─── WEEK SELECTOR ──────────────────────────────────────────────────────
+function updateWeekSelector() {
+  const sel = document.getElementById('weekSelector');
+  const data = loadData();
+  sel.innerHTML = '<option value="current">Última registrada</option>';
+  data.forEach((d, i) => {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = formatDate(d.date);
+    sel.appendChild(opt);
+  });
+}
+
+document.getElementById('weekSelector').addEventListener('change', () => refreshDashboard());
+
+// ─── DASHBOARD REFRESH ──────────────────────────────────────────────────
+let chartConversao, chartOrigem, chartTempo, chartModos;
+
+function refreshDashboard() {
+  const data = loadData();
+  if (data.length === 0) return renderEmptyDashboard();
+
+  const sel = document.getElementById('weekSelector').value;
+  const current = sel === 'current' ? data[data.length - 1] : data[parseInt(sel)];
+  const prev = data.length > 1 ? data[data.indexOf(current) - 1] || null : null;
+
+  // KPIs
+  setKPI('kpi-tempo', current.tempo, 'min');
+  setKPI('kpi-conversao', current.conversao, '%');
+  setKPI('kpi-reviews', getTotalReviews(data), '');
+
+  // Campaigns count
+  const camps = loadCampaigns();
+  const doneCount = Object.values(camps).filter(v => v).length;
+  document.getElementById('kpi-campanhas').innerHTML = doneCount + '<span class="kpi-card__unit">/4</span>';
+
+  // Trends
+  setTrend('kpi-tempo-trend', current.tempo, prev?.tempo, true); // lower is better
+  setTrend('kpi-conversao-trend', current.conversao, prev?.conversao, false);
+  setTrend('kpi-reviews-trend', current.reviews, prev?.reviews, false);
+
+  // Charts
+  renderCharts(data);
+
+  // Alerts
+  renderAlerts(current);
+}
+
+function setKPI(id, value, unit) {
+  document.getElementById(id).innerHTML = (value || '—') + '<span class="kpi-card__unit">' + unit + '</span>';
+}
+
+function setTrend(id, current, previous, lowerBetter) {
+  const el = document.getElementById(id);
+  if (previous == null || previous === 0) {
+    el.className = 'kpi-card__trend kpi-card__trend--neutral';
+    el.textContent = 'sem comparativo';
+    return;
+  }
+  const diff = current - previous;
+  const pct = Math.round((diff / previous) * 100);
+  const isGood = lowerBetter ? diff <= 0 : diff >= 0;
+
+  el.className = 'kpi-card__trend ' + (isGood ? 'kpi-card__trend--up' : 'kpi-card__trend--down');
+  el.textContent = (diff > 0 ? '+' : '') + pct + '%';
+}
+
+function getTotalReviews(data) {
+  const base = 180;
+  return base + data.reduce((sum, d) => sum + (d.reviews || 0), 0);
+}
+
+function renderEmptyDashboard() {
+  // Leave KPIs as dashes — they're already "—"
+}
+
+// ─── CHARTS ──────────────────────────────────────────────────────────────
+function renderCharts(data) {
+  const labels = data.map(d => formatDate(d.date));
+  const chartDefaults = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { ticks: { color: '#48484A', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,.04)' } },
+      y: { ticks: { color: '#48484A', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,.04)' } }
+    }
+  };
+
+  // Conversão line
+  if (chartConversao) chartConversao.destroy();
+  chartConversao = new Chart(document.getElementById('chartConversao'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        data: data.map(d => d.conversao),
+        borderColor: '#30D158',
+        backgroundColor: 'rgba(48,209,88,.1)',
+        fill: true,
+        tension: .4,
+        pointRadius: 4,
+        pointBackgroundColor: '#30D158',
+      }]
+    },
+    options: {
+      ...chartDefaults,
+      scales: {
+        ...chartDefaults.scales,
+        y: { ...chartDefaults.scales.y, min: 0, max: 100, ticks: { ...chartDefaults.scales.y.ticks, callback: v => v + '%' } }
+      },
+      plugins: {
+        ...chartDefaults.plugins,
+        annotation: {
+          annotations: {
+            line1: { type: 'line', yMin: 60, yMax: 60, borderColor: 'rgba(48,209,88,.3)', borderDash: [6, 4] }
+          }
+        }
+      }
+    }
+  });
+
+  // Origem bar (latest week)
+  const latest = data[data.length - 1];
+  if (chartOrigem) chartOrigem.destroy();
+  chartOrigem = new Chart(document.getElementById('chartOrigem'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Google', 'Instagram', 'Indicação', 'LED'],
+      datasets: [{
+        data: [latest.origemGoogle, latest.origemIG, latest.origemIndicacao, latest.origemLED],
+        backgroundColor: ['#0A84FF', '#BF5AF2', '#30D158', '#FFD60A'],
+        borderWidth: 0,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: { color: '#8E8E93', font: { size: 11, family: 'Plus Jakarta Sans' }, padding: 12 }
+        }
+      }
+    }
+  });
+
+  // Tempo line
+  if (chartTempo) chartTempo.destroy();
+  chartTempo = new Chart(document.getElementById('chartTempo'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        data: data.map(d => d.tempo),
+        backgroundColor: data.map(d => d.tempo <= 10 ? 'rgba(48,209,88,.6)' : d.tempo <= 15 ? 'rgba(255,214,10,.6)' : 'rgba(255,69,58,.6)'),
+        borderRadius: 6,
+      }]
+    },
+    options: { ...chartDefaults }
+  });
+
+  // Modos comparison
+  if (chartModos) chartModos.destroy();
+  chartModos = new Chart(document.getElementById('chartModos'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Padrão', data: data.map(d => d.convPadrao), backgroundColor: 'rgba(10,132,255,.7)', borderRadius: 4 },
+        { label: 'Agressivo', data: data.map(d => d.convAgressivo), backgroundColor: 'rgba(255,85,0,.7)', borderRadius: 4 },
+      ]
+    },
+    options: {
+      ...chartDefaults,
+      plugins: {
+        legend: {
+          display: true,
+          labels: { color: '#8E8E93', font: { size: 10, family: 'Plus Jakarta Sans' }, padding: 12 }
+        }
+      }
+    }
+  });
+}
+
+// ─── ALERTS ──────────────────────────────────────────────────────────────
+function renderAlerts(d) {
+  const grid = document.getElementById('alertGrid');
+  const alerts = [
+    {
+      condition: d.convAgressivo < 40,
+      hasData: d.convAgressivo > 0,
+      ifText: `Conversão AGRESSIVO: ${d.convAgressivo}% (meta: >40%)`,
+      thenText: 'Script está queimando leads quentes. <strong>Ação:</strong> revisar fechamento forçado — suavizar CTA ou testar oferta 02 (garantia).',
+    },
+    {
+      condition: d.convPadrao < 25,
+      hasData: d.convPadrao > 0,
+      ifText: `Conversão PADRÃO: ${d.convPadrao}% (meta: >25%)`,
+      thenText: 'Qualificação lenta ou leads frios. <strong>Ação:</strong> encurtar funil ou ativar oferta 03 (diagnóstico grátis) no primeiro contato.',
+    },
+    {
+      condition: d.origemGoogle > 0 && d.origemIG > 0 && d.origemGoogle > d.origemIG * 1.5,
+      hasData: d.origemGoogle > 0 || d.origemIG > 0,
+      ifText: `Google (${d.origemGoogle}) converte muito mais que IG (${d.origemIG})`,
+      thenText: 'Google traz intenção pura. <strong>Ação:</strong> reforçar GMB (mais avaliações, posts) e considerar Google Ads local.',
+    },
+    {
+      condition: d.origemIG > 0 && d.origemGoogle > 0 && d.origemIG < d.origemGoogle * 0.5,
+      hasData: d.origemGoogle > 0 || d.origemIG > 0,
+      ifText: `IG (${d.origemIG}) converte muito menos que Google (${d.origemGoogle})`,
+      thenText: 'Instagram está trazendo curioso. <strong>Ação:</strong> reformular CTA da bio — de "conheça" para "orçamento em 10 min pelo link".',
+    },
+    {
+      condition: d.tempoFechamento > 30,
+      hasData: d.tempoFechamento > 0,
+      ifText: `Tempo até fechamento: ${d.tempoFechamento}min (meta: <15min)`,
+      thenText: 'Funil tem fricção. <strong>Ação:</strong> auditar scripts, cortar 1 etapa, testar oferta 01 (mesmo dia).',
+    },
+    {
+      condition: false, // This is a manual check
+      hasData: false,
+      ifText: 'Canal sem rastreamento por 2+ semanas',
+      thenText: 'UTM quebrado ou canal morto. <strong>Ação:</strong> testar link com UTM pessoalmente. Se funciona, canal não gera — reavaliar.',
+    },
+  ];
+
+  grid.innerHTML = alerts.map(a => {
+    let status, statusClass;
+    if (!a.hasData) { status = 'neutral'; statusClass = 'neutral'; }
+    else if (a.condition) { status = 'danger'; statusClass = 'danger'; }
+    else { status = 'ok'; statusClass = 'ok'; }
+
+    return `
+      <div class="alert-card alert-card--${statusClass}">
+        <div class="alert-dot alert-dot--${status}"></div>
+        <div class="alert-card__content">
+          <p class="alert-card__if alert-card__if--${statusClass}">${a.ifText}</p>
+          <p class="alert-card__then">${a.condition ? a.thenText : (a.hasData ? '✓ Dentro da meta' : 'Aguardando dados')}</p>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ─── CAMPAIGNS ──────────────────────────────────────────────────────────
+function renderCampaigns() {
+  const grid = document.getElementById('campaignGrid');
+  const done = loadCampaigns();
+
+  grid.innerHTML = CAMPAIGNS.map(c => {
+    const isDone = done[c.id];
+    const cls = isDone ? 'campaign-card--done' : 'campaign-card--upcoming';
+    const statusCls = isDone ? 'campaign-card__status--done' : 'campaign-card__status--upcoming';
+    const statusText = isDone ? '✓ Concluída' : 'Pendente';
+
+    return `
+      <div class="campaign-card ${cls}" onclick="toggleCampaign('${c.id}')">
+        <p class="campaign-card__date">${c.quarter} · ${c.date}</p>
+        <p class="campaign-card__name">${c.name}</p>
+        <p class="campaign-card__status ${statusCls}">${statusText}</p>
+      </div>
+    `;
+  }).join('');
+}
+
+function toggleCampaign(id) {
+  const done = loadCampaigns();
+  done[id] = !done[id];
+  saveCampaigns(done);
+  renderCampaigns();
+  refreshDashboard();
+}
+
+// ─── CHECKLIST ──────────────────────────────────────────────────────────
+function renderChecklist() {
+  const list = document.getElementById('checkList');
+  const done = loadChecks();
+
+  list.innerHTML = CHECKLIST.map(c => {
+    const isDone = done[c.id];
+    return `
+      <li class="check-item ${isDone ? 'check-item--done' : ''}" onclick="toggleCheck(${c.id})">
+        <div class="check-box"><span class="check-box__icon">✓</span></div>
+        <span class="check-item__text">${c.text}</span>
+        <span class="check-item__day">${c.day}</span>
+      </li>
+    `;
+  }).join('');
+
+  const total = CHECKLIST.length;
+  const doneCount = Object.values(done).filter(v => v).length;
+  document.getElementById('checkProgress').style.width = (doneCount / total * 100) + '%';
+  document.getElementById('checkLabel').textContent = doneCount + ' / ' + total + ' concluídas';
+}
+
+function toggleCheck(id) {
+  const done = loadChecks();
+  done[id] = !done[id];
+  saveChecks(done);
+  renderChecklist();
+}
+
+// ─── HISTORY ────────────────────────────────────────────────────────────
+function renderHistory() {
+  const data = loadData();
+  const container = document.getElementById('historyContent');
+
+  if (data.length === 0) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-state__icon">📊</div><p class="empty-state__text">Nenhuma semana registrada ainda.<br>Vá em "Registrar Semana" para começar.</p></div>';
+    return;
+  }
+
+  container.innerHTML = `
+    <div style="overflow-x:auto;">
+      <table class="history-table">
+        <thead>
+          <tr>
+            <th>Semana</th>
+            <th>Leads</th>
+            <th>Fechados</th>
+            <th>Conv.</th>
+            <th>Tempo Resp.</th>
+            <th>Reviews</th>
+            <th>Padrão</th>
+            <th>Agressivo</th>
+            <th>Google</th>
+            <th>IG</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          ${data.map((d, i) => `
+            <tr>
+              <td><strong style="color:var(--text);">${formatDate(d.date)}</strong></td>
+              <td>${d.leads}</td>
+              <td>${d.fechados}</td>
+              <td><strong style="color:${d.conversao >= 60 ? 'var(--color-green)' : d.conversao >= 40 ? 'var(--color-yellow)' : 'var(--color-red)'};">${d.conversao}%</strong></td>
+              <td><strong style="color:${d.tempo <= 10 ? 'var(--color-green)' : d.tempo <= 15 ? 'var(--color-yellow)' : 'var(--color-red)'};">${d.tempo}min</strong></td>
+              <td>+${d.reviews}</td>
+              <td>${d.convPadrao}%</td>
+              <td>${d.convAgressivo}%</td>
+              <td>${d.origemGoogle}</td>
+              <td>${d.origemIG}</td>
+              <td><button onclick="deleteWeek(${i})" style="background:none;border:none;color:var(--color-red);cursor:pointer;font-size:12px;">✕</button></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function deleteWeek(index) {
+  if (!confirm('Deletar esta semana?')) return;
+  const data = loadData();
+  data.splice(index, 1);
+  saveData(data);
+  renderHistory();
+  refreshDashboard();
+  updateWeekSelector();
+  showToast('Semana removida');
+}
+
+// ─── UTILS ──────────────────────────────────────────────────────────────
+function formatDate(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00');
+  return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+}
+
+// ─── SEED INICIAL — Linha de base pré-Hagajota ──────────────────────────
+// Dados-semente: 4 semanas anteriores ao kick-off (29/03 → 19/04/2026)
+// Mostram o status quo da Startfix antes do funil estruturado
+// (tempo lento, conversão capada, modo agressivo só no final como teste).
+// Apagados se você clicar "⟲ Reset" no header.
+const SEED_DATA = [
+  { date: '2026-03-29', tempo: 32, leads: 18, fechados: 5,
+    origemGoogle: 7, origemIG: 6, origemIndicacao: 4, origemLED: 1,
+    convPadrao: 22, convAgressivo: 0,
+    reviews: 2, reels: 1200, cliquesBio: 45, taxaAbertura: 0, nps: 75, tempoFechamento: 45,
+    conversao: 28 },
+  { date: '2026-04-05', tempo: 28, leads: 22, fechados: 7,
+    origemGoogle: 9, origemIG: 7, origemIndicacao: 5, origemLED: 1,
+    convPadrao: 25, convAgressivo: 0,
+    reviews: 3, reels: 2500, cliquesBio: 78, taxaAbertura: 0, nps: 78, tempoFechamento: 38,
+    conversao: 32 },
+  { date: '2026-04-12', tempo: 25, leads: 25, fechados: 8,
+    origemGoogle: 11, origemIG: 8, origemIndicacao: 5, origemLED: 1,
+    convPadrao: 27, convAgressivo: 0,
+    reviews: 4, reels: 3100, cliquesBio: 95, taxaAbertura: 0, nps: 80, tempoFechamento: 32,
+    conversao: 32 },
+  { date: '2026-04-19', tempo: 22, leads: 30, fechados: 11,
+    origemGoogle: 13, origemIG: 9, origemIndicacao: 6, origemLED: 2,
+    convPadrao: 30, convAgressivo: 35,
+    reviews: 5, reels: 4800, cliquesBio: 140, taxaAbertura: 42, nps: 82, tempoFechamento: 25,
+    conversao: 37 },
+];
+
+// Itens da Semana 1 que a Hagajota já preparou antes do kick-off
+const SEED_CHECKS = { 1: true, 2: true, 7: true };
+
+function seedIfEmpty() {
+  if (loadData().length === 0) saveData(SEED_DATA);
+  if (Object.keys(loadChecks()).length === 0) saveChecks(SEED_CHECKS);
+}
+
+function resetAll() {
+  if (!confirm('Apagar TODOS os dados (semanas, checklist, campanhas)?\nA linha de base voltará a aparecer no próximo carregamento.')) return;
+  localStorage.removeItem(STORE_KEY);
+  localStorage.removeItem(CAMPAIGNS_KEY);
+  localStorage.removeItem(CHECKS_KEY);
+  location.reload();
+}
+
+// ─── INIT ───────────────────────────────────────────────────────────────
+(function init() {
+  // Set today's date on the form
+  const today = new Date();
+  document.getElementById('inputDate').value = today.toISOString().split('T')[0];
+
+  seedIfEmpty();
+  updateWeekSelector();
+  refreshDashboard();
+  renderCampaigns();
+  renderChecklist();
+})();
+</script>
+</body>
+</html>
