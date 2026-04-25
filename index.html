@@ -642,7 +642,10 @@
         <button class="nav__tab" data-tab="checklist">Semana 1</button>
         <button class="nav__tab" data-tab="history">Histórico</button>
       </div>
-      <button onclick="resetAll()" title="Limpar todos os dados (reset)" style="background:none;border:1px solid var(--border);color:var(--text-dim);font-size:11px;padding:6px 10px;border-radius:8px;cursor:pointer;margin-left:16px;">⟲ Reset</button>
+      <button id="syncBtn" onclick="fetchFromSheet(true)" title="Sincronizar com planilha do Google" style="background:var(--color-primary-dim);border:1px solid var(--border-accent);color:var(--color-primary);font-size:11px;font-weight:700;padding:6px 12px;border-radius:8px;cursor:pointer;margin-left:16px;display:flex;align-items:center;gap:6px;">
+        <span id="syncIcon">🔄</span> <span id="syncText">Sincronizar</span>
+      </button>
+      <button onclick="resetAll()" title="Limpar todos os dados (reset)" style="background:none;border:1px solid var(--border);color:var(--text-dim);font-size:11px;padding:6px 10px;border-radius:8px;cursor:pointer;margin-left:8px;">⟲ Reset</button>
     </div>
   </div>
 </nav>
@@ -657,6 +660,10 @@
         <div>
           <p class="section-label">Visão geral</p>
           <h2 class="section-title">PAINEL DE GESTÃO</h2>
+          <p id="sourceBadge" style="font-size:11px;color:var(--text-dim);margin-top:6px;">
+            <span id="sourceIcon">📊</span>
+            <span id="sourceText">Carregando...</span>
+          </p>
         </div>
         <div style="display:flex;align-items:center;gap:12px;">
           <span style="font-size:12px;color:var(--text-dim);">Semana:</span>
@@ -666,13 +673,29 @@
         </div>
       </div>
 
-      <!-- Seed banner (some when data is just placeholders) -->
+      <!-- Banners contextuais -->
       <div class="seed-banner" id="seedBanner" style="display:none;">
         <span class="seed-banner__icon">⚠️</span>
         <div>
-          <strong>Linha de base estimada</strong> — os dados visíveis são uma simulação das 4 semanas pré-Hagajota
-          para você testar o painel. Substitua pelos números reais do Jorge clicando em <strong>Registrar Semana</strong>
-          ou apague tudo no botão <strong>⟲ Reset</strong> do topo.
+          <strong>Linha de base estimada</strong> — os dados visíveis são uma simulação das 4 semanas pré-Hagajota.
+          Clique em <strong>🔄 Sincronizar</strong> no topo pra puxar os dados reais da planilha do Jorge,
+          ou registre manualmente em <strong>Registrar Semana</strong>.
+        </div>
+      </div>
+      <div class="seed-banner" id="sheetBanner" style="display:none;border-color:rgba(48,209,88,.25);background:rgba(48,209,88,.04);">
+        <span class="seed-banner__icon">🔗</span>
+        <div>
+          <strong style="color:var(--color-green);">Conectado à planilha do Jorge</strong> —
+          os dados vêm direto do Google Sheets. Pra atualizar, basta a Rafael preencher uma linha nova lá
+          e clicar em <strong>🔄 Sincronizar</strong> aqui.
+        </div>
+      </div>
+      <div class="seed-banner" id="errorBanner" style="display:none;border-color:rgba(255,69,58,.25);background:rgba(255,69,58,.04);">
+        <span class="seed-banner__icon">❌</span>
+        <div>
+          <strong style="color:var(--color-red);">Falha ao buscar a planilha</strong> —
+          <span id="errorMsg">verifique se ela está publicada como CSV (Arquivo › Compartilhar › Publicar na web).</span>
+          Mostrando dados em cache local.
         </div>
       </div>
 
@@ -953,6 +976,159 @@
 const STORE_KEY = 'startfix_dashboard';
 const CAMPAIGNS_KEY = 'startfix_campaigns';
 const CHECKS_KEY = 'startfix_checks';
+const SOURCE_KEY = 'startfix_source';   // 'sheet' | 'manual' | 'seed'
+const SYNC_KEY = 'startfix_last_sync';  // ISO timestamp
+
+// ─── GOOGLE SHEETS INTEGRATION ──────────────────────────────────────────
+const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSZwO0d811S5jQPkqeb5stNgqx0mG_qPV46zI3Dak894kCQgjo0X3n-2VEEcb0ZPfq3ozqdHl8kQIkr/pub?gid=506745258&single=true&output=csv';
+
+// Parser CSV simples (suporta vírgulas dentro de "aspas")
+function parseCSV(text) {
+  const rows = [];
+  const lines = text.replace(/\r/g, '').split('\n');
+  for (const line of lines) {
+    if (!line) continue;
+    const fields = [];
+    let cur = '', inQ = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (ch === '"') { inQ = !inQ; continue; }
+      if (ch === ',' && !inQ) { fields.push(cur); cur = ''; continue; }
+      cur += ch;
+    }
+    fields.push(cur);
+    rows.push(fields);
+  }
+  return rows;
+}
+
+// "21/04/2026" → "2026-04-21"
+function parseBRDate(s) {
+  if (!s) return null;
+  const m = s.trim().match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (!m) return null;
+  return `${m[3]}-${m[2]}-${m[1]}`;
+}
+
+// "50,0%" → 50 · "1 dia" → 1 · "18.600" → 18600
+function parseBRNum(s) {
+  if (s == null || s === '') return 0;
+  const cleaned = String(s).replace(/[%R$\s]/g, '').replace(/\./g, '').replace(',', '.');
+  const n = parseFloat(cleaned);
+  return isNaN(n) ? 0 : n;
+}
+
+function csvToEntries(csvText) {
+  const rows = parseCSV(csvText);
+  // Encontrar a linha de header (que começa com "Semana")
+  const headerIdx = rows.findIndex(r => r[0] && r[0].trim() === 'Semana');
+  if (headerIdx < 0) throw new Error('Cabeçalho não encontrado na planilha');
+
+  const dataRows = rows.slice(headerIdx + 1);
+  const entries = [];
+
+  for (const r of dataRows) {
+    const date = parseBRDate(r[0]);
+    if (!date) continue;
+    // Pular linhas vazias / Sem dados
+    const status = (r[23] || '').trim();
+    const leadsRec = parseBRNum(r[3]);
+    if (status === 'Sem dados' || (leadsRec === 0 && parseBRNum(r[5]) === 0)) continue;
+
+    const leads     = leadsRec;
+    const fechados  = parseBRNum(r[4]);
+    const conversao = leads > 0 ? Math.round((fechados / leads) * 100) : parseBRNum(r[20]);
+
+    entries.push({
+      date,
+      responsavel:      (r[1] || '').trim(),
+      tempo:            parseBRNum(r[2]),
+      leads,
+      fechados,
+      valor:            parseBRNum(r[5]),  // R$ vendido (campo novo)
+      origemGoogle:     parseBRNum(r[6]),
+      origemIG:         parseBRNum(r[7]),
+      origemIndicacao:  parseBRNum(r[8]),
+      origemLED:        parseBRNum(r[9]),
+      convPadrao:       parseBRNum(r[21]),
+      convAgressivo:    parseBRNum(r[22]),
+      reviews:          parseBRNum(r[14]),
+      reels:            parseBRNum(r[15]),
+      cliquesBio:       parseBRNum(r[16]),
+      taxaAbertura:     parseBRNum(r[17]),
+      nps:              parseBRNum(r[18]),
+      tempoFechamento:  parseBRNum(r[19]),
+      conversao,
+    });
+  }
+  entries.sort((a, b) => a.date.localeCompare(b.date));
+  return entries;
+}
+
+async function fetchFromSheet(showToastOnSuccess = false) {
+  const btn = document.getElementById('syncBtn');
+  const icon = document.getElementById('syncIcon');
+  const txt = document.getElementById('syncText');
+  if (btn) { btn.disabled = true; icon.textContent = '⏳'; txt.textContent = 'Sincronizando...'; }
+
+  try {
+    const url = SHEET_CSV_URL + '&_=' + Date.now(); // cache-bust
+    const res = await fetch(url, { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const csv = await res.text();
+    const entries = csvToEntries(csv);
+    if (entries.length === 0) throw new Error('A planilha não tem nenhuma semana preenchida ainda.');
+
+    saveData(entries);
+    localStorage.setItem(SOURCE_KEY, 'sheet');
+    localStorage.setItem(SYNC_KEY, new Date().toISOString());
+    clearSeedFlag();
+
+    if (showToastOnSuccess) showToast(`Planilha sincronizada · ${entries.length} semana${entries.length > 1 ? 's' : ''}`);
+    refreshDashboard();
+    updateWeekSelector();
+    return true;
+  } catch (err) {
+    console.error('Sync error:', err);
+    showError(err.message);
+    return false;
+  } finally {
+    if (btn) { btn.disabled = false; icon.textContent = '🔄'; txt.textContent = 'Sincronizar'; }
+  }
+}
+
+function showError(msg) {
+  const banner = document.getElementById('errorBanner');
+  document.getElementById('errorMsg').textContent = msg;
+  banner.style.display = 'flex';
+  setTimeout(() => banner.style.display = 'none', 8000);
+}
+
+function getSourceInfo() {
+  const src = localStorage.getItem(SOURCE_KEY) || (isSeedOnly() ? 'seed' : 'manual');
+  const lastSync = localStorage.getItem(SYNC_KEY);
+  return { src, lastSync };
+}
+
+function updateSourceBadge() {
+  const { src, lastSync } = getSourceInfo();
+  const icon = document.getElementById('sourceIcon');
+  const txt = document.getElementById('sourceText');
+  if (!txt) return;
+  if (src === 'sheet' && lastSync) {
+    const t = new Date(lastSync);
+    const hh = String(t.getHours()).padStart(2, '0');
+    const mm = String(t.getMinutes()).padStart(2, '0');
+    icon.textContent = '🔗';
+    txt.innerHTML = `<strong style="color:var(--color-green);">Planilha Google</strong> · sincronizada às ${hh}:${mm}`;
+  } else if (src === 'manual') {
+    icon.textContent = '✍️';
+    txt.textContent = 'Entrada manual · cache local';
+  } else {
+    icon.textContent = '🌱';
+    txt.textContent = 'Dados-semente (placeholder)';
+  }
+}
 
 function loadData() {
   try { return JSON.parse(localStorage.getItem(STORE_KEY)) || []; }
@@ -1141,7 +1317,8 @@ function saveWeek() {
 
   data.sort((a, b) => a.date.localeCompare(b.date));
   saveData(data);
-  clearSeedFlag(); // dados reais entraram → some o banner
+  clearSeedFlag();
+  localStorage.setItem(SOURCE_KEY, 'manual');
   showToast('Semana salva com sucesso');
   refreshDashboard();
   updateWeekSelector();
@@ -1183,7 +1360,10 @@ let chartConversao, chartOrigem, chartTempo, chartModos;
 
 function refreshDashboard() {
   const data = loadData();
-  document.getElementById('seedBanner').style.display = isSeedOnly() ? 'flex' : 'none';
+  const { src } = getSourceInfo();
+  document.getElementById('seedBanner').style.display = (src === 'seed' || isSeedOnly()) ? 'flex' : 'none';
+  document.getElementById('sheetBanner').style.display = src === 'sheet' ? 'flex' : 'none';
+  updateSourceBadge();
   if (data.length === 0) return renderEmptyDashboard();
 
   const sel = document.getElementById('weekSelector').value;
@@ -1194,6 +1374,22 @@ function refreshDashboard() {
   setKPI('kpi-tempo', current.tempo, 'min');
   setKPI('kpi-conversao', current.conversao, '%');
   setKPI('kpi-reviews', getTotalReviews(data), '');
+
+  // Mostra R$ vendido como sub-meta do card de conversão
+  const convMeta = document.getElementById('kpi-conversao').parentElement.querySelector('.kpi-card__meta');
+  let valorLine = document.getElementById('kpi-conversao-valor');
+  if (current.valor) {
+    if (!valorLine) {
+      valorLine = document.createElement('p');
+      valorLine.id = 'kpi-conversao-valor';
+      valorLine.className = 'kpi-card__meta';
+      valorLine.style.cssText = 'color:var(--color-green);font-weight:700;margin-top:4px;';
+      convMeta.insertAdjacentElement('afterend', valorLine);
+    }
+    valorLine.textContent = `💰 R$ ${current.valor.toLocaleString('pt-BR')} vendidos`;
+  } else if (valorLine) {
+    valorLine.remove();
+  }
 
   // Campaigns count
   const camps = loadCampaigns();
@@ -1481,13 +1677,15 @@ function renderHistory() {
         <thead>
           <tr>
             <th>Semana</th>
+            <th>Resp.</th>
             <th>Leads</th>
-            <th>Fechados</th>
+            <th>Fech.</th>
+            <th>R$ Vendido</th>
             <th>Conv.</th>
-            <th>Tempo Resp.</th>
+            <th>T. Resp.</th>
             <th>Reviews</th>
-            <th>Padrão</th>
-            <th>Agressivo</th>
+            <th>Pad.</th>
+            <th>Agres.</th>
             <th>Google</th>
             <th>IG</th>
             <th></th>
@@ -1497,8 +1695,10 @@ function renderHistory() {
           ${data.map((d, i) => `
             <tr>
               <td><strong style="color:var(--text);">${formatDate(d.date)}</strong></td>
+              <td style="color:var(--text-muted);">${d.responsavel || '—'}</td>
               <td>${d.leads}</td>
               <td>${d.fechados}</td>
+              <td style="color:var(--color-green);font-weight:700;">${d.valor ? 'R$ ' + d.valor.toLocaleString('pt-BR') : '—'}</td>
               <td><strong style="color:${d.conversao >= 60 ? 'var(--color-green)' : d.conversao >= 40 ? 'var(--color-yellow)' : 'var(--color-red)'};">${d.conversao}%</strong></td>
               <td><strong style="color:${d.tempo <= 10 ? 'var(--color-green)' : d.tempo <= 15 ? 'var(--color-yellow)' : 'var(--color-red)'};">${d.tempo}min</strong></td>
               <td>+${d.reviews}</td>
@@ -1586,6 +1786,9 @@ function resetAll() {
   localStorage.removeItem(STORE_KEY);
   localStorage.removeItem(CAMPAIGNS_KEY);
   localStorage.removeItem(CHECKS_KEY);
+  localStorage.removeItem(SOURCE_KEY);
+  localStorage.removeItem(SYNC_KEY);
+  localStorage.removeItem(SEED_FLAG_KEY);
   location.reload();
 }
 
@@ -1601,6 +1804,14 @@ function resetAll() {
   renderCampaigns();
   renderChecklist();
   renderPhases();
+
+  // Auto-sync com a planilha do Google (silencioso)
+  // Só puxa se: nunca puxou, OU já é fonte 'sheet' (atualizar)
+  // Não sobrescreve entradas manuais
+  const src = localStorage.getItem(SOURCE_KEY);
+  if (src !== 'manual') {
+    fetchFromSheet(false);
+  }
 })();
 </script>
 </body>
