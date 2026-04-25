@@ -299,7 +299,18 @@
       color: var(--text-muted);
       margin-bottom: 20px;
     }
-    .chart-card canvas { width: 100% !important; }
+    .chart-card__canvas {
+      position: relative;
+      height: 240px;
+      width: 100%;
+    }
+    .chart-card__canvas--sm { height: 200px; }
+    .chart-card__canvas canvas {
+      position: absolute !important;
+      inset: 0;
+      width: 100% !important;
+      height: 100% !important;
+    }
 
     /* ─── ALERTS ──────────────────────────────────────────────────────────── */
     .alert-grid {
@@ -595,21 +606,21 @@
       <div class="chart-grid">
         <div class="chart-card">
           <div class="chart-card__title">Conversão semanal — Lead → Cliente (%)</div>
-          <canvas id="chartConversao" height="220"></canvas>
+          <div class="chart-card__canvas"><canvas id="chartConversao"></canvas></div>
         </div>
         <div class="chart-card">
           <div class="chart-card__title">Leads por Origem</div>
-          <canvas id="chartOrigem" height="220"></canvas>
+          <div class="chart-card__canvas"><canvas id="chartOrigem"></canvas></div>
         </div>
       </div>
       <div class="chart-grid" style="grid-template-columns: 1fr 1fr;">
         <div class="chart-card">
           <div class="chart-card__title">Tempo de Resposta — Evolução (min)</div>
-          <canvas id="chartTempo" height="180"></canvas>
+          <div class="chart-card__canvas chart-card__canvas--sm"><canvas id="chartTempo"></canvas></div>
         </div>
         <div class="chart-card">
           <div class="chart-card__title">Conversão: Modo Padrão vs Agressivo (%)</div>
-          <canvas id="chartModos" height="180"></canvas>
+          <div class="chart-card__canvas chart-card__canvas--sm"><canvas id="chartModos"></canvas></div>
         </div>
       </div>
 
@@ -1046,14 +1057,6 @@ function renderCharts(data) {
       scales: {
         ...chartDefaults.scales,
         y: { ...chartDefaults.scales.y, min: 0, max: 100, ticks: { ...chartDefaults.scales.y.ticks, callback: v => v + '%' } }
-      },
-      plugins: {
-        ...chartDefaults.plugins,
-        annotation: {
-          annotations: {
-            line1: { type: 'line', yMin: 60, yMax: 60, borderColor: 'rgba(48,209,88,.3)', borderDash: [6, 4] }
-          }
-        }
       }
     }
   });
