@@ -902,8 +902,8 @@
         <span class="seed-banner__icon">🔗</span>
         <div>
           <strong style="color:var(--color-green);">Conectado à planilha da Startfix</strong> —
-          os dados vêm direto do Google Sheets. Pra atualizar, basta a atendimento preencher uma linha nova lá
-          e clicar em <strong>🔄 Sincronizar</strong> aqui.
+          o painel só considera semanas com data <strong>posterior a 28/04/2026</strong> (marco-zero do projeto).
+          Pra atualizar, basta o atendimento preencher uma linha nova na planilha e clicar em <strong>🔄 Sincronizar</strong> aqui.
         </div>
       </div>
       <div class="seed-banner" id="errorBanner" style="display:none;border-color:rgba(255,69,58,.25);background:rgba(255,69,58,.04);">
@@ -1232,6 +1232,10 @@ const SYNC_KEY = 'startfix_last_sync';  // ISO timestamp
 // ─── GOOGLE SHEETS INTEGRATION ──────────────────────────────────────────
 const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSZwO0d811S5jQPkqeb5stNgqx0mG_qPV46zI3Dak894kCQgjo0X3n-2VEEcb0ZPfq3ozqdHl8kQIkr/pub?gid=506745258&single=true&output=csv';
 
+// Marco-zero · só semanas POSTERIORES a esta data são consideradas reais.
+// (Os dados de teste lançados durante o setup ficam de fora do painel.)
+const HAGA_CUTOFF_DATE = '2026-04-28'; // formato YYYY-MM-DD
+
 // Parser CSV simples (suporta vírgulas dentro de "aspas")
 function parseCSV(text) {
   const rows = [];
@@ -1280,6 +1284,8 @@ function csvToEntries(csvText) {
   for (const r of dataRows) {
     const date = parseBRDate(r[0]);
     if (!date) continue;
+    // Marco-zero: ignorar dados de teste anteriores ao cutoff
+    if (date <= HAGA_CUTOFF_DATE) continue;
     // Pular linhas vazias / Sem dados
     const status = (r[23] || '').trim();
     const leadsRec = parseBRNum(r[3]);
@@ -1327,14 +1333,18 @@ async function fetchFromSheet(showToastOnSuccess = false) {
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const csv = await res.text();
     const entries = csvToEntries(csv);
-    if (entries.length === 0) throw new Error('A planilha não tem nenhuma semana preenchida ainda.');
 
+    // Estado válido: planilha conectada mas ainda sem semana real (pós-cutoff)
     saveData(entries);
     localStorage.setItem(SOURCE_KEY, 'sheet');
     localStorage.setItem(SYNC_KEY, new Date().toISOString());
     clearSeedFlag();
 
-    if (showToastOnSuccess) showToast(`Planilha sincronizada · ${entries.length} semana${entries.length > 1 ? 's' : ''}`);
+    if (showToastOnSuccess) {
+      showToast(entries.length === 0
+        ? 'Planilha conectada · aguardando primeira semana real'
+        : `Planilha sincronizada · ${entries.length} semana${entries.length > 1 ? 's' : ''}`);
+    }
     refreshDashboard();
     updateWeekSelector();
     return true;
@@ -1683,7 +1693,25 @@ function getTotalReviews(data) {
 }
 
 function renderEmptyDashboard() {
-  // Leave KPIs as dashes — they're already "—"
+  // Reseta KPIs visualmente
+  ['kpi-tempo','kpi-conversao','kpi-reviews'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = '—<span class="kpi-card__unit"></span>';
+  });
+  document.getElementById('kpi-campanhas').innerHTML = '0<span class="kpi-card__unit">/9</span>';
+  ['kpi-tempo-trend','kpi-conversao-trend','kpi-reviews-trend','kpi-campanhas-trend'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.className = 'kpi-card__trend kpi-card__trend--neutral'; el.textContent = 'aguardando dados'; }
+  });
+  // Limpa a linha de R$ vendido se existir
+  const valorLine = document.getElementById('kpi-conversao-valor');
+  if (valorLine) valorLine.remove();
+  // Limpa charts
+  [chartConversao, chartOrigem, chartTempo, chartModos].forEach(c => { try { c && c.destroy(); } catch(e) {} });
+  chartConversao = chartOrigem = chartTempo = chartModos = null;
+  // Limpa alerts
+  const grid = document.getElementById('alertGrid');
+  if (grid) grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><div class="empty-state__icon">🛰</div><p class="empty-state__text"><strong style="color:var(--text);">Aguardando primeira semana real</strong><br>Quando o atendimento preencher uma linha nova na planilha (data posterior a 28/04/2026), o painel acende sozinho.</p></div>';
 }
 
 // ─── CHARTS ──────────────────────────────────────────────────────────────
@@ -2016,10 +2044,14 @@ const SEED_CHECKS = { 1: true, 2: true, 7: true };
 const SEED_FLAG_KEY = 'startfix_is_seed';
 
 function seedIfEmpty() {
-  if (loadData().length === 0) {
-    saveData(SEED_DATA);
-    localStorage.setItem(SEED_FLAG_KEY, '1');
+  // Migração: se o cache tem dados pré-cutoff (seed antigo ou teste), descarta.
+  const existing = loadData();
+  const hasOnlyPreCutoff = existing.length > 0 && existing.every(d => d.date <= HAGA_CUTOFF_DATE);
+  if (hasOnlyPreCutoff) {
+    saveData([]);
+    localStorage.removeItem(SEED_FLAG_KEY);
   }
+  // Não popula mais seed automaticamente — agora o painel vive da planilha real.
   if (Object.keys(loadChecks()).length === 0) saveChecks(SEED_CHECKS);
 }
 
@@ -2146,7 +2178,15 @@ function hagaCurrentWeek() {
 
 function hagaDiagnostico() {
   const w = hagaCurrentWeek();
-  if (!w) return 'Não tem nenhuma semana registrada ainda. Sincroniza a planilha (botão 🔄 no topo) ou registra manualmente em <strong>Registrar Semana</strong>.';
+  if (!w) return `Ainda não tem semana real registrada. O marco-zero do projeto é <strong>28/04/2026</strong> — qualquer linha nova que o atendimento preencher na planilha após essa data eu considero.
+
+Enquanto isso, posso te mostrar:
+<ul>
+<li><strong>/pos</strong> — posicionamento e frase-bandeira</li>
+<li><strong>/wa urg</strong> — script de WhatsApp pronto</li>
+<li><strong>/proxima</strong> — próxima campanha do calendário</li>
+<li><strong>/fase</strong> — em qual fase do plano 90d estamos</li>
+</ul>`;
 
   const { current: c, prev: p } = w;
   const conv = c.conversao;
@@ -2542,9 +2582,18 @@ Acabei de olhar o painel: última semana de <strong>${formatDate(w.current.date)
 Como posso ajudar agora?`
     : `Oi, eu sou o <strong>HAGA</strong> — operador Hagajota da Startfix.
 
-Ainda não tem semana registrada. Sincroniza a planilha (botão 🔄 lá em cima) e me chama de novo que eu já dou o primeiro diagnóstico.
+Painel conectado à planilha, mas ainda <strong>aguardando a primeira semana real</strong> (qualquer linha posterior a 28/04/2026 vale).
 
-Enquanto isso, posso te mostrar os scripts de WhatsApp ou o posicionamento. Digita <strong>/help</strong> pra ver tudo.`;
+Enquanto a primeira semana não chega, posso te ajudar com:
+<ul>
+<li><strong>/pos</strong> — posicionamento + frase-bandeira</li>
+<li><strong>/wa urg</strong>, <strong>/wa pj</strong>, <strong>/wa reativ</strong> — scripts WhatsApp</li>
+<li><strong>/proxima</strong> — próxima campanha + checklist</li>
+<li><strong>/concorrente</strong> — mapa competitivo</li>
+<li><strong>/briefing</strong> — contexto pronto pra colar no Claude.ai</li>
+</ul>
+
+Digita <strong>/help</strong> pra ver tudo.`;
   hagaRenderMsg(intro, 'bot');
 }
 
